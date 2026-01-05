@@ -1,0 +1,15 @@
+{
+  "name": "Apiary Companion",
+  "description": "Mobile-first beekeeping app MVP with AI-powered inspection structuring",
+  "version": "1.0.0",
+  "main": "apiary-companion/index.ts",
+  "scripts": {
+    "dev": "cd apiary-companion && npm install && npx expo start --tunnel",
+    "start": "cd apiary-companion && npx expo start --tunnel",
+    "web": "cd apiary-companion && npx expo start --web",
+    "install-deps": "cd apiary-companion && npm install"
+  },
+  "keywords": ["beekeeping", "expo", "react-native", "sqlite", "offline-first"],
+  "author": "Apiary Companion Team",
+  "license": "MIT"
+}

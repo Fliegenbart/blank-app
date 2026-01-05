@@ -2,6 +2,22 @@
 
 A mobile-first beekeeping app MVP for hobby and semi-professional beekeepers in the EU. Built with GDPR compliance and offline-first architecture.
 
+---
+
+## 🚀 Running in Replit
+
+**See [REPLIT_SETUP.md](../REPLIT_SETUP.md) for complete Replit instructions!**
+
+### Quick Start (3 steps):
+
+1. **Click Run** in Replit (or run `npm run dev`)
+2. **Install Expo Go** on your phone ([iOS](https://apps.apple.com/app/expo-go/id982107779) | [Android](https://play.google.com/store/apps/details?id=host.exp.exponent))
+3. **Scan QR code** in Replit console → App loads with demo data!
+
+The app works best on a physical device (camera, voice recording). Web preview has limited features.
+
+---
+
 ## Core Principle
 
 **Capture → Structure → Remind → Learn**
