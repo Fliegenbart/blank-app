@@ -1,0 +1,35 @@
+run = "npm run dev"
+entrypoint = "apiary-companion/index.ts"
+hidden = [".config", "package-lock.json", "apiary-companion/node_modules"]
+
+[nix]
+channel = "stable-23_11"
+
+[deployment]
+run = ["sh", "-c", "npm run dev"]
+
+[languages]
+[languages.javascript]
+pattern = "**/{*.js,*.jsx,*.ts,*.tsx}"
+
+[languages.javascript.languageServer]
+start = "typescript-language-server --stdio"
+
+[env]
+EXPO_TUNNEL_SUBDOMAIN = "apiary-companion"
+
+[[ports]]
+localPort = 8081
+externalPort = 80
+
+[[ports]]
+localPort = 19000
+externalPort = 3000
+
+[[ports]]
+localPort = 19001
+externalPort = 3001
+
+[[ports]]
+localPort = 19002
+externalPort = 3002
