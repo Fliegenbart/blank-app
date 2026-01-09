@@ -105,6 +105,27 @@ streamlit run streamlit_app.py
 
 Die Website wird automatisch im Browser unter `http://localhost:8501` geöffnet.
 
+## 🌐 Online Deployment
+
+### Empfohlen: Streamlit Community Cloud (Kostenlos)
+
+Die einfachste Methode, diese App online zu deployen:
+
+1. **Pushen Sie den Code zu GitHub** (bereits erledigt ✓)
+2. **Gehen Sie zu [share.streamlit.io](https://share.streamlit.io)**
+3. **Melden Sie sich mit GitHub an**
+4. **Klicken Sie auf "New app" und wählen Sie:**
+   - Repository: `Fliegenbart/blank-app`
+   - Branch: `claude/accessibility-tools-website-EK47X` oder `main`
+   - Main file: `streamlit_app.py`
+5. **Klicken Sie auf "Deploy"**
+
+Ihre App wird in wenigen Minuten unter einer öffentlichen URL verfügbar sein!
+
+**⚠️ Hinweis:** Vercel wird NICHT unterstützt, da Streamlit einen dauerhaft laufenden Server benötigt. Verwenden Sie Streamlit Community Cloud, Railway oder Render.
+
+📖 Ausführliche Deployment-Anleitung: Siehe [DEPLOYMENT.md](DEPLOYMENT.md)
+
 ## 📦 Verwendete Technologien
 
 - **Streamlit** - Web-Framework für die Benutzeroberfläche
