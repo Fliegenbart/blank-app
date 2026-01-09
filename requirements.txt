@@ -1,1 +1,12 @@
 streamlit
+python-pptx
+pillow
+reportlab
+pypdf
+gtts
+pydub
+colorsys
+numpy
+pdf2image
+poppler-utils
+PyMuPDF
