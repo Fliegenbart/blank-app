@@ -126,6 +126,19 @@ services:
       api:
         condition: service_healthy
 
+  web:
+    build:
+      context: ../apps/web
+      dockerfile: Dockerfile
+    container_name: brand-engine-web
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   redis_data:

@@ -26,6 +26,7 @@ A web service for extracting brand identity (Brand DNA) from documents and gener
 ## Tech Stack
 
 - **Backend**: Python 3.11, FastAPI
+- **Frontend**: Next.js 14, React 18, Tailwind CSS, shadcn/ui
 - **Database**: PostgreSQL
 - **Queue**: Redis + RQ
 - **Storage**: MinIO (S3-compatible)
@@ -51,7 +52,8 @@ docker compose up -d
 ```
 
 This starts:
-- API on http://localhost:8000
+- **Web UI** on http://localhost:3000
+- **API** on http://localhost:8000
 - Worker (RQ)
 - PostgreSQL on port 5432
 - Redis on port 6379
@@ -74,6 +76,54 @@ cd samples
 pip install -r requirements.txt
 python generate_samples.py
 ```
+
+## Web UI
+
+The web frontend is a Next.js 14 application with a modern UI built using shadcn/ui components.
+
+### Features
+
+- **Authentication**: Login and registration with JWT
+- **Brand Management**: Create and manage multiple brands
+- **Document Uploads**: Drag-and-drop file uploads with progress tracking
+- **Job Tracking**: Real-time job status with progress stepper
+- **Profile Viewer**: Browse brand profiles with tabs for Summary, Tokens, Imagery, Tone, and Evidence
+- **Content Generation**: Generate websites and newsletters with customizable options
+- **Team Management**: Invite members with role-based access (Owner, Editor, Viewer)
+
+### Running the Web UI (Development)
+
+```bash
+cd apps/web
+npm install
+npm run dev
+```
+
+The development server starts at http://localhost:3000
+
+### Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_API_URL` | Backend API URL | `http://localhost:8000` |
+
+### Pages
+
+| Route | Description |
+|-------|-------------|
+| `/login` | User login |
+| `/register` | User registration |
+| `/brands` | Brands list and creation |
+| `/brands/[brandId]/overview` | Brand dashboard |
+| `/brands/[brandId]/uploads` | Document uploads |
+| `/brands/[brandId]/profiles` | Profile versions list |
+| `/brands/[brandId]/profiles/[version]` | Profile viewer |
+| `/brands/[brandId]/generate` | Content generation hub |
+| `/brands/[brandId]/generate/website` | Website generator |
+| `/brands/[brandId]/generate/newsletter` | Newsletter generator |
+| `/brands/[brandId]/outputs` | Generated outputs |
+| `/brands/[brandId]/team` | Team management |
+| `/jobs/[jobId]` | Job detail and progress |
 
 ## API Documentation
 
@@ -212,6 +262,17 @@ brand-engine/
 │   │   │   ├── schemas/     # Pydantic schemas
 │   │   │   └── services/    # Business logic
 │   │   └── migrations/      # Alembic migrations
+│   ├── web/                 # Next.js 14 frontend
+│   │   ├── app/             # App Router pages
+│   │   ├── components/      # React components
+│   │   │   ├── ui/          # shadcn/ui components
+│   │   │   ├── brand/       # Brand-specific components
+│   │   │   ├── job/         # Job-related components
+│   │   │   ├── layout/      # Layout components
+│   │   │   └── profile/     # Profile viewer components
+│   │   ├── hooks/           # Custom React hooks
+│   │   ├── lib/             # Utilities and API client
+│   │   └── types/           # TypeScript types
 │   └── worker/              # RQ worker
 │       └── app/
 │           ├── analyzers/   # Brand analysis
@@ -252,6 +313,7 @@ Key environment variables (see `.env.example`):
 | `SECRET_KEY` | JWT signing key | Change in production! |
 | `OPENAI_API_KEY` | Optional: OpenAI for advanced analysis | (empty = mock provider) |
 | `MAX_UPLOAD_SIZE_MB` | Max upload size | `100` |
+| `NEXT_PUBLIC_API_URL` | API URL for web frontend | `http://localhost:8000` |
 
 ## AI Providers
 
