@@ -550,7 +550,7 @@ def _asset_to_response(asset: ThemeAsset) -> ThemeAssetResponse:
         print_pdf_path=asset.print_pdf_path,
         figma_file_key=asset.figma_file_key,
         variants=asset.variants,
-        metadata=asset.metadata,
+        metadata=asset.asset_metadata,
         error_message=asset.error_message,
         created_at=asset.created_at,
         updated_at=asset.updated_at,

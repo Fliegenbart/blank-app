@@ -189,14 +189,14 @@ class ThemeAsset(Base, TimestampMixin):
         self.variants_json = json.dumps(value) if value else None
 
     @property
-    def metadata(self) -> dict:
+    def asset_metadata(self) -> dict:
         """Get metadata as dict."""
         if self.metadata_json:
             return json.loads(self.metadata_json)
         return {}
 
-    @metadata.setter
-    def metadata(self, value: dict):
+    @asset_metadata.setter
+    def asset_metadata(self, value: dict):
         """Set metadata from dict."""
         self.metadata_json = json.dumps(value) if value else None
 
