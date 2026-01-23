@@ -1,7 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Globe, Mail, FileOutput, ArrowRight, Sparkles } from "lucide-react";
+import {
+  Globe,
+  Mail,
+  FileOutput,
+  ArrowRight,
+  Sparkles,
+  LayoutTemplate,
+  Share2,
+  Link2,
+} from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,16 +18,40 @@ import { useBrand } from "../layout";
 
 const generators = [
   {
+    id: "landing-page",
+    title: "Landing Page",
+    description: "Generate AI-powered landing pages with reference-based structure",
+    icon: LayoutTemplate,
+    href: "/generate/landing-page",
+    badge: "New",
+  },
+  {
+    id: "social-media",
+    title: "Social Media",
+    description: "Create content for Twitter, LinkedIn, Instagram, and Facebook",
+    icon: Share2,
+    href: "/generate/social-media",
+    badge: "New",
+  },
+  {
+    id: "email",
+    title: "Email Templates",
+    description: "Generate newsletters, promotional, and announcement emails",
+    icon: Mail,
+    href: "/generate/email",
+    badge: "New",
+  },
+  {
     id: "website",
     title: "Website",
     description: "Generate a branded landing page with HTML, CSS, and assets",
     icon: Globe,
     href: "/generate/website",
-    badge: "Popular",
+    badge: null,
   },
   {
     id: "newsletter",
-    title: "Newsletter",
+    title: "Newsletter (Legacy)",
     description: "Create email-ready newsletter templates in HTML and MJML",
     icon: Mail,
     href: "/generate/newsletter",
@@ -95,6 +128,28 @@ export default function GeneratePage() {
           </Card>
         ))}
       </div>
+
+      {/* References Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Link2 className="h-5 w-5" />
+            Reference Websites
+          </CardTitle>
+          <CardDescription>
+            Add reference websites to use as templates for content generation
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="outline"
+            onClick={() => router.push(`/brands/${brand.id}/references`)}
+          >
+            Manage References
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Recent Outputs Quick Link */}
       <Card>

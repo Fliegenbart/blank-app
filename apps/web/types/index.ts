@@ -44,7 +44,15 @@ export interface Upload {
 }
 
 export type JobStatus = "pending" | "queued" | "running" | "completed" | "failed";
-export type JobType = "analyze" | "analyze_upload" | "generate_website" | "generate_newsletter";
+export type JobType =
+  | "analyze"
+  | "analyze_upload"
+  | "generate_website"
+  | "generate_newsletter"
+  | "scrape_reference"
+  | "generate_landing_page"
+  | "generate_social_media"
+  | "generate_email";
 
 export interface JobLog {
   timestamp: string;
@@ -250,4 +258,86 @@ export interface NewsletterGenerateRequest {
   cta_text?: string;
   cta_url?: string;
   footer_text?: string;
+}
+
+// Reference types
+export type ReferenceStatus = "pending" | "scraping" | "analyzing" | "completed" | "failed";
+
+export interface Reference {
+  id: string;
+  brand_id: string;
+  name: string;
+  description: string | null;
+  urls: string[];
+  status: ReferenceStatus;
+  error_message: string | null;
+  page_count: number | null;
+  total_word_count: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReferenceDetail extends Reference {
+  structure: ReferenceStructure | null;
+  scraped_data: ScrapedData | null;
+}
+
+export interface ScrapedSection {
+  section_type: string;
+  heading: string | null;
+  subheading: string | null;
+  content: string[];
+  cta_text: string | null;
+  images: string[];
+  items: Record<string, any>[];
+  order: number;
+}
+
+export interface ScrapedPage {
+  url: string;
+  title: string;
+  meta_description: string | null;
+  sections: ScrapedSection[];
+  navigation: { text: string; url: string }[];
+  word_count: number;
+}
+
+export interface ScrapedData {
+  pages: ScrapedPage[];
+}
+
+export interface ReferenceStructure {
+  common_sections: string[];
+  section_order_pattern: string[];
+  key_messaging: string[];
+  navigation_structure: { text: string; url: string }[];
+  content_themes: string[];
+  cta_patterns: string[];
+  total_word_count: number;
+}
+
+// New generation request types
+export interface LandingPageGenerateRequest {
+  topic: string;
+  sections?: string[];
+  reference_id?: string;
+  profile_version?: number;
+}
+
+export type SocialMediaPlatform = "twitter" | "linkedin" | "instagram" | "facebook";
+
+export interface SocialMediaGenerateRequest {
+  topic: string;
+  platforms: SocialMediaPlatform[];
+  reference_id?: string;
+  profile_version?: number;
+}
+
+export type EmailType = "newsletter" | "promotional" | "announcement" | "welcome" | "followup";
+
+export interface EmailGenerateRequest {
+  topic: string;
+  email_type: EmailType;
+  reference_id?: string;
+  profile_version?: number;
 }

@@ -7,6 +7,7 @@ from app.models.job import Job, JobStatus, JobType
 from app.models.brand_profile import BrandProfile
 from app.models.output import Output
 from app.models.audit_log import AuditLog
+from app.models.reference import Reference, ReferenceStatus
 
 __all__ = [
     "Base",
@@ -22,4 +23,6 @@ __all__ = [
     "BrandProfile",
     "Output",
     "AuditLog",
+    "Reference",
+    "ReferenceStatus",
 ]

@@ -21,6 +21,10 @@ class JobType(str, enum.Enum):
     ANALYZE = "analyze"
     GENERATE_WEBSITE = "generate_website"
     GENERATE_NEWSLETTER = "generate_newsletter"
+    SCRAPE_REFERENCE = "scrape_reference"
+    GENERATE_LANDING_PAGE = "generate_landing_page"
+    GENERATE_SOCIAL_MEDIA = "generate_social_media"
+    GENERATE_EMAIL = "generate_email"
 
 
 class Job(Base, TimestampMixin):

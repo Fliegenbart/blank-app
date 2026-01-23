@@ -10,7 +10,13 @@ from app.models.brand import BrandMember
 from app.models.brand_profile import BrandProfile
 from app.models.job import Job, JobStatus, JobType
 from app.schemas.job import JobResponse
-from app.schemas.generator import WebsiteGenerateRequest, NewsletterGenerateRequest
+from app.schemas.generator import (
+    WebsiteGenerateRequest,
+    NewsletterGenerateRequest,
+    LandingPageGenerateRequest,
+    SocialMediaGenerateRequest,
+    EmailGenerateRequest,
+)
 from app.services.job_queue import get_job_queue
 from app.services.audit import AuditService
 
@@ -124,6 +130,138 @@ def generate_newsletter(
     # Enqueue job
     job_queue = get_job_queue()
     rq_job_id = job_queue.enqueue_generate_newsletter(job.id)
+
+    # Update job with RQ ID
+    job.rq_job_id = rq_job_id
+    job.status = JobStatus.QUEUED.value
+    db.commit()
+
+    # Audit log
+    audit = AuditService(db)
+    audit.log_job_created(job.id, job.job_type, current_user.id, brand_id)
+
+    return _job_to_response(job)
+
+
+@router.post("/landing-page", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
+def generate_landing_page(
+    brand_id: str,
+    request: LandingPageGenerateRequest,
+    membership: BrandMember = Depends(require_brand_editor),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Generate a landing page based on the brand profile and optional reference."""
+    profile_version = _get_profile_version(brand_id, request.profile_version, db)
+
+    # Create job
+    job = Job(
+        brand_id=brand_id,
+        created_by=current_user.id,
+        job_type=JobType.GENERATE_LANDING_PAGE.value,
+        status=JobStatus.PENDING.value,
+        profile_version=profile_version,
+        params_json=json.dumps({
+            "topic": request.topic,
+            "sections": request.sections,
+            "reference_id": request.reference_id,
+        }),
+    )
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+
+    # Enqueue job
+    job_queue = get_job_queue()
+    rq_job_id = job_queue.enqueue_generate_landing_page(job.id)
+
+    # Update job with RQ ID
+    job.rq_job_id = rq_job_id
+    job.status = JobStatus.QUEUED.value
+    db.commit()
+
+    # Audit log
+    audit = AuditService(db)
+    audit.log_job_created(job.id, job.job_type, current_user.id, brand_id)
+
+    return _job_to_response(job)
+
+
+@router.post("/social-media", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
+def generate_social_media(
+    brand_id: str,
+    request: SocialMediaGenerateRequest,
+    membership: BrandMember = Depends(require_brand_editor),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Generate social media content based on the brand profile and optional reference."""
+    profile_version = _get_profile_version(brand_id, request.profile_version, db)
+
+    # Create job
+    job = Job(
+        brand_id=brand_id,
+        created_by=current_user.id,
+        job_type=JobType.GENERATE_SOCIAL_MEDIA.value,
+        status=JobStatus.PENDING.value,
+        profile_version=profile_version,
+        params_json=json.dumps({
+            "topic": request.topic,
+            "platforms": [p.value for p in request.platforms],
+            "reference_id": request.reference_id,
+        }),
+    )
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+
+    # Enqueue job
+    job_queue = get_job_queue()
+    rq_job_id = job_queue.enqueue_generate_social_media(job.id)
+
+    # Update job with RQ ID
+    job.rq_job_id = rq_job_id
+    job.status = JobStatus.QUEUED.value
+    db.commit()
+
+    # Audit log
+    audit = AuditService(db)
+    audit.log_job_created(job.id, job.job_type, current_user.id, brand_id)
+
+    return _job_to_response(job)
+
+
+@router.post("/email", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
+def generate_email(
+    brand_id: str,
+    request: EmailGenerateRequest,
+    membership: BrandMember = Depends(require_brand_editor),
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Generate email content based on the brand profile and optional reference."""
+    profile_version = _get_profile_version(brand_id, request.profile_version, db)
+
+    # Create job
+    job = Job(
+        brand_id=brand_id,
+        created_by=current_user.id,
+        job_type=JobType.GENERATE_EMAIL.value,
+        status=JobStatus.PENDING.value,
+        profile_version=profile_version,
+        params_json=json.dumps({
+            "topic": request.topic,
+            "email_type": request.email_type.value,
+            "reference_id": request.reference_id,
+        }),
+    )
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+
+    # Enqueue job
+    job_queue = get_job_queue()
+    rq_job_id = job_queue.enqueue_generate_email(job.id)
 
     # Update job with RQ ID
     job.rq_job_id = rq_job_id

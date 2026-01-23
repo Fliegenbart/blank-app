@@ -52,6 +52,46 @@ class JobQueueService:
         logger.info("Enqueued generate_newsletter job", job_id=job_id, rq_job_id=rq_job.id)
         return rq_job.id
 
+    def enqueue_scrape_reference(self, job_id: str) -> str:
+        """Enqueue a reference scraping job."""
+        rq_job = self.default_queue.enqueue(
+            "app.tasks.scrape.scrape_reference",
+            job_id,
+            job_timeout="20m",
+        )
+        logger.info("Enqueued scrape_reference job", job_id=job_id, rq_job_id=rq_job.id)
+        return rq_job.id
+
+    def enqueue_generate_landing_page(self, job_id: str) -> str:
+        """Enqueue a landing page generation job."""
+        rq_job = self.default_queue.enqueue(
+            "app.tasks.generate.generate_landing_page",
+            job_id,
+            job_timeout="20m",
+        )
+        logger.info("Enqueued generate_landing_page job", job_id=job_id, rq_job_id=rq_job.id)
+        return rq_job.id
+
+    def enqueue_generate_social_media(self, job_id: str) -> str:
+        """Enqueue a social media content generation job."""
+        rq_job = self.default_queue.enqueue(
+            "app.tasks.generate.generate_social_media",
+            job_id,
+            job_timeout="15m",
+        )
+        logger.info("Enqueued generate_social_media job", job_id=job_id, rq_job_id=rq_job.id)
+        return rq_job.id
+
+    def enqueue_generate_email(self, job_id: str) -> str:
+        """Enqueue an email template generation job."""
+        rq_job = self.default_queue.enqueue(
+            "app.tasks.generate.generate_email",
+            job_id,
+            job_timeout="15m",
+        )
+        logger.info("Enqueued generate_email job", job_id=job_id, rq_job_id=rq_job.id)
+        return rq_job.id
+
     def get_job_status(self, rq_job_id: str) -> Optional[Dict[str, Any]]:
         """Get the status of an RQ job."""
         try:
