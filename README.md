@@ -1,197 +1,401 @@
-# ♿ Barrierefreiheits-Tools Website
+# Turn-on Brand Engine
 
-Eine umfassende Web-Plattform mit verschiedenen Online-Tools zur Erstellung und Prüfung barrierefreier digitaler Inhalte gemäß den **Web Content Accessibility Guidelines (WCAG 2.1)**.
+A web service for extracting brand identity (Brand DNA) from documents and generating on-brand content.
 
-## 📋 Übersicht
+## Features
 
-Diese Website bietet eine Sammlung von Tools, die dabei helfen, digitale Inhalte barrierefrei zu gestalten und bestehende Inhalte auf Barrierefreiheit zu prüfen. Alle Tools sind kostenlos und erfordern keine Registrierung.
+- **Document Analysis**: Upload PDF/PPTX files and extract brand identity
+  - Color palette extraction (primary, secondary, neutrals)
+  - Typography analysis (heading/body fonts, scale)
+  - Layout system detection (margins, grid)
+  - Tone of voice analysis
+  - Imagery style detection
 
-## 🛠️ Verfügbare Tools
+- **Content Generation**: Generate on-brand outputs
+  - Website (HTML + CSS with design tokens)
+  - Newsletter (HTML email + MJML source)
 
-### 📊 PowerPoint zu barrierefreiem PDF
-- Konvertiert PowerPoint-Präsentationen (.pptx) in barrierefreie PDF-Dokumente
-- Erhält die Textstruktur und logische Lesereihenfolge
-- Extrahiert und behält Alternativtexte für Bilder bei
-- Erstellt optional ein Inhaltsverzeichnis
-- Fügt Barrierefreiheits-Metadaten hinzu
-- Unterstützt A4 und Letter Format
+- **Multi-Brand & Team Support**
+  - Organizations → Brands → Members
+  - RBAC: Owner, Editor, Viewer roles
 
-**Funktionen:**
-- Strukturierte Überschriften
-- Screenreader-kompatible Textebenen
-- Bildextraktion mit Alternativtexten
-- Anpassbare Konvertierungsoptionen
+- **Versioned Brand Profiles**
+  - Each analysis creates a new version
+  - JSON profile + Markdown summary
 
-### 🎨 Farbkontrast-Checker
-- Überprüft Farbkombinationen auf WCAG-Konformität
-- Berechnet präzise Kontrastverhältnisse
-- Bewertet nach AA und AAA Standards
-- Live-Vorschau von Text mit den gewählten Farben
-- Gibt konkrete Empfehlungen zur Verbesserung
+## Tech Stack
 
-**WCAG-Standards:**
-- **Level AA:** 4.5:1 für normalen Text, 3:1 für großen Text
-- **Level AAA:** 7:1 für normalen Text, 4.5:1 für großen Text
+- **Backend**: Python 3.11, FastAPI
+- **Frontend**: Next.js 14, React 18, Tailwind CSS, shadcn/ui
+- **Database**: PostgreSQL
+- **Queue**: Redis + RQ
+- **Storage**: MinIO (S3-compatible)
+- **Parsing**: python-pptx, pdfplumber, poppler-utils
 
-### 🖼️ Alt-Text Generator
-- Hilft bei der Erstellung aussagekräftiger Alternativtexte für Bilder
-- Zeigt Best Practices und Richtlinien an
-- Bietet kontextspezifische Hilfestellungen
-- Zeichenzähler mit Empfehlungen
-- Bewertung der Alt-Text-Qualität
-- Unterstützt verschiedene Bildtypen (informativ, dekorativ, funktional, komplex)
+## Quick Start
 
-**Features:**
-- Bilddetails-Anzeige (Format, Größe, Modus)
-- HTML-Code-Generierung
-- Automatische Qualitätsprüfung
+### 1. Clone and Setup
 
-### 📄 PDF Barrierefreiheitsprüfer
-- Analysiert PDF-Dokumente auf Barrierefreiheit
-- Extrahiert und prüft Text auf Screenreader-Kompatibilität
-- Untersucht Metadaten und Dokumentstruktur
-- Identifiziert Bilder ohne Alternativtexte
-- Erstellt detaillierte Bewertungen mit Score
-- Gibt spezifische Verbesserungsempfehlungen
-
-**Geprüfte Aspekte:**
-- Textextraktion
-- Metadaten (Titel, Autor, Sprache)
-- Bildanalyse
-- Dokumentstruktur
-
-### 🔊 Text-zu-Sprache Konverter
-- Konvertiert Text in natürlich klingende Audiodateien
-- Unterstützt 10 verschiedene Sprachen
-- Anpassbare Sprechgeschwindigkeit
-- MP3-Download-Funktion
-- Integrierter Audio-Player
-- Geschätzte Audiozeit-Berechnung
-
-**Unterstützte Sprachen:**
-- Deutsch, Englisch, Französisch, Spanisch, Italienisch
-- Niederländisch, Polnisch, Portugiesisch, Russisch, Türkisch
-
-**Anwendungsfälle:**
-- Hörbuch-Versionen von Dokumenten
-- Audiodeskriptionen
-- Barrierefreie Web-Inhalte
-- Lernmaterialien
-
-## 🚀 Installation und Verwendung
-
-### Voraussetzungen
-- Python 3.8 oder höher
-- pip (Python Package Manager)
-
-### Installation
-
-1. Repository klonen:
 ```bash
-git clone <repository-url>
-cd blank-app
+git clone <repo-url>
+cd brand-engine
+
+# Copy environment file
+cp .env.example .env
 ```
 
-2. Abhängigkeiten installieren:
+### 2. Start Services
+
 ```bash
+cd infra
+docker compose up -d
+```
+
+This starts:
+- **Web UI** on http://localhost:3000
+- **API** on http://localhost:8000
+- Worker (RQ)
+- PostgreSQL on port 5432
+- Redis on port 6379
+- MinIO on http://localhost:9000 (console: http://localhost:9001)
+
+### 3. Run Migrations
+
+```bash
+# Enter the API container
+docker compose exec api bash
+
+# Run migrations
+alembic upgrade head
+```
+
+### 4. Generate Sample Files (Optional)
+
+```bash
+cd samples
 pip install -r requirements.txt
+python generate_samples.py
 ```
 
-### Anwendung starten
+## Web UI
+
+The web frontend is a Next.js 14 application with a modern UI built using shadcn/ui components.
+
+### Features
+
+- **Authentication**: Login and registration with JWT
+- **Brand Management**: Create and manage multiple brands
+- **Document Uploads**: Drag-and-drop file uploads with progress tracking
+- **Job Tracking**: Real-time job status with progress stepper
+- **Profile Viewer**: Browse brand profiles with tabs for Summary, Tokens, Imagery, Tone, and Evidence
+- **Content Generation**: Generate websites and newsletters with customizable options
+- **Team Management**: Invite members with role-based access (Owner, Editor, Viewer)
+
+### Running the Web UI (Development)
 
 ```bash
-streamlit run streamlit_app.py
+cd apps/web
+npm install
+npm run dev
 ```
 
-Die Website wird automatisch im Browser unter `http://localhost:8501` geöffnet.
+The development server starts at http://localhost:3000
 
-## 📦 Verwendete Technologien
+### Environment Variables
 
-- **Streamlit** - Web-Framework für die Benutzeroberfläche
-- **python-pptx** - PowerPoint-Datei-Verarbeitung
-- **ReportLab** - PDF-Generierung
-- **PyMuPDF (fitz)** - PDF-Analyse und -Extraktion
-- **Pillow (PIL)** - Bildverarbeitung
-- **gTTS (Google Text-to-Speech)** - Text-zu-Sprache-Konvertierung
-- **pypdf** - PDF-Manipulation
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_API_URL` | Backend API URL | `http://localhost:8000` |
 
-## 📖 WCAG 2.1 Richtlinien
+### Pages
 
-Diese Tools basieren auf den **Web Content Accessibility Guidelines (WCAG) 2.1**, die internationale Standards für barrierefreie Web-Inhalte definieren.
+| Route | Description |
+|-------|-------------|
+| `/login` | User login |
+| `/register` | User registration |
+| `/brands` | Brands list and creation |
+| `/brands/[brandId]/overview` | Brand dashboard |
+| `/brands/[brandId]/uploads` | Document uploads |
+| `/brands/[brandId]/profiles` | Profile versions list |
+| `/brands/[brandId]/profiles/[version]` | Profile viewer |
+| `/brands/[brandId]/generate` | Content generation hub |
+| `/brands/[brandId]/generate/website` | Website generator |
+| `/brands/[brandId]/generate/newsletter` | Newsletter generator |
+| `/brands/[brandId]/outputs` | Generated outputs |
+| `/brands/[brandId]/team` | Team management |
+| `/jobs/[jobId]` | Job detail and progress |
 
-**Konformitätsstufen:**
-- **Level A:** Minimale Barrierefreiheit
-- **Level AA:** Akzeptable Barrierefreiheit (empfohlen für die meisten Websites)
-- **Level AAA:** Optimale Barrierefreiheit
+## API Documentation
 
-Weitere Informationen: [W3C WCAG 2.1](https://www.w3.org/WAI/WCAG21/quickref/)
+Once running, visit:
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
 
-## 🎯 Funktionsweise
+## Example curl Commands
 
-### PPT zu PDF Konverter
-1. PowerPoint-Datei hochladen (.pptx)
-2. Konvertierungsoptionen auswählen (Bilder, Metadaten, Format, TOC)
-3. Auf "Konvertieren" klicken
-4. Barrierefreies PDF herunterladen
+### Register User
 
-### Farbkontrast-Checker
-1. Vordergrundfarbe (Text) wählen
-2. Hintergrundfarbe wählen
-3. Kontrastverhältnis wird automatisch berechnet
-4. Ergebnis nach WCAG AA/AAA prüfen
-5. Empfehlungen befolgen
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "securepassword123",
+    "full_name": "John Doe"
+  }'
+```
 
-### Alt-Text Generator
-1. Bild hochladen
-2. Bildtyp auswählen (informativ, dekorativ, etc.)
-3. Beschreibung eingeben
-4. Qualität überprüfen
-5. HTML-Code kopieren
+### Login
 
-### PDF Prüfer
-1. PDF-Dokument hochladen
-2. Auf "Prüfen" klicken
-3. Analyseergebnisse anzeigen
-4. Empfehlungen umsetzen
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=user@example.com&password=securepassword123"
+```
 
-### Text-zu-Sprache
-1. Text eingeben oder einfügen
-2. Sprache auswählen
-3. Optional: Langsame Geschwindigkeit aktivieren
-4. Audio generieren
-5. Anhören und/oder herunterladen
+Save the `access_token` from the response.
 
-## 🌐 Barrierefreiheit der Website selbst
+### Create Brand
 
-Diese Website wurde mit Fokus auf Barrierefreiheit entwickelt:
-- Semantisches HTML
-- Ausreichende Farbkontraste
-- Klare Navigation
-- Verständliche Beschriftungen
-- Responsive Design
-- Tastaturnavigation
+```bash
+export TOKEN="your_access_token_here"
 
-## 🤝 Beitragen
+curl -X POST http://localhost:8000/api/v1/brands \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Acme Corp",
+    "slug": "acme-corp",
+    "description": "Our main brand"
+  }'
+```
 
-Verbesserungsvorschläge und Beiträge sind willkommen! Bitte erstellen Sie ein Issue oder einen Pull Request.
+### Upload Document
 
-## 📄 Lizenz
+```bash
+export BRAND_ID="your_brand_id_here"
 
-Siehe [LICENSE](LICENSE) Datei für Details.
+curl -X POST "http://localhost:8000/api/v1/brands/$BRAND_ID/uploads" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@samples/sample.pptx"
+```
 
-## 💡 Hinweise
+### Analyze Upload
 
-- Alle Verarbeitungen finden lokal statt - keine Daten werden an externe Server gesendet
-- Die Tools sind als Hilfsmittel gedacht und ersetzen keine manuelle Barrierefreiheitsprüfung
-- Für vollständige WCAG-Konformität sollten zusätzliche Tests durchgeführt werden
+```bash
+export UPLOAD_ID="your_upload_id_here"
 
-## 🔗 Weiterführende Ressourcen
+curl -X POST "http://localhost:8000/api/v1/brands/$BRAND_ID/analyze?upload_id=$UPLOAD_ID" \
+  -H "Authorization: Bearer $TOKEN"
+```
 
-- [WCAG 2.1 Richtlinien](https://www.w3.org/WAI/WCAG21/quickref/)
-- [WebAIM - Web Accessibility In Mind](https://webaim.org/)
-- [A11Y Project](https://www.a11yproject.com/)
-- [MDN Web Accessibility](https://developer.mozilla.org/en-US/docs/Web/Accessibility)
+### Check Job Status
 
----
+```bash
+export JOB_ID="your_job_id_here"
 
-**Entwickelt mit ❤️ für eine zugänglichere digitale Welt**
+curl "http://localhost:8000/api/v1/jobs/$JOB_ID" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Get Brand Profile
+
+```bash
+# Get latest profile
+curl "http://localhost:8000/api/v1/brands/$BRAND_ID/profiles/latest" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Get specific version
+curl "http://localhost:8000/api/v1/brands/$BRAND_ID/profiles/1" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Generate Website
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/brands/$BRAND_ID/generate/website" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "topic": "Product Launch",
+    "pages": [
+      {"slug": "index", "title": "Home", "sections": ["hero", "features", "cta"]},
+      {"slug": "about", "title": "About Us", "sections": ["hero", "features"]}
+    ],
+    "brief": "Landing page for our new product"
+  }'
+```
+
+### Generate Newsletter
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/brands/$BRAND_ID/generate/newsletter" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "topic": "Summer Sale",
+    "offer": "50% off all products",
+    "cta": "Shop Now"
+  }'
+```
+
+### Download Output
+
+```bash
+export OUTPUT_ID="your_output_id_here"
+
+curl -L "http://localhost:8000/api/v1/outputs/$OUTPUT_ID/download" \
+  -H "Authorization: Bearer $TOKEN" \
+  -o output.zip
+```
+
+## Project Structure
+
+```
+brand-engine/
+├── apps/
+│   ├── api/                 # FastAPI application
+│   │   ├── app/
+│   │   │   ├── api/v1/      # API endpoints
+│   │   │   ├── core/        # Config, security, database
+│   │   │   ├── models/      # SQLAlchemy models
+│   │   │   ├── schemas/     # Pydantic schemas
+│   │   │   └── services/    # Business logic
+│   │   └── migrations/      # Alembic migrations
+│   ├── web/                 # Next.js 14 frontend
+│   │   ├── app/             # App Router pages
+│   │   ├── components/      # React components
+│   │   │   ├── ui/          # shadcn/ui components
+│   │   │   ├── brand/       # Brand-specific components
+│   │   │   ├── job/         # Job-related components
+│   │   │   ├── layout/      # Layout components
+│   │   │   └── profile/     # Profile viewer components
+│   │   ├── hooks/           # Custom React hooks
+│   │   ├── lib/             # Utilities and API client
+│   │   └── types/           # TypeScript types
+│   └── worker/              # RQ worker
+│       └── app/
+│           ├── analyzers/   # Brand analysis
+│           ├── generators/  # Content generation
+│           ├── parsers/     # Document parsing
+│           ├── providers/   # LLM/Vision providers
+│           └── tasks/       # RQ tasks
+├── infra/
+│   └── docker-compose.yml
+├── samples/                 # Sample files
+├── tests/                   # Test suite
+├── .env.example
+└── README.md
+```
+
+## Storage
+
+Outputs are stored in MinIO under these paths:
+
+- Uploads: `uploads/{brand_id}/{upload_id}/{filename}`
+- Debug artifacts: `debug/{job_id}/...`
+- Generated outputs: `outputs/{brand_id}/{output_id}/{filename}`
+- Profile assets: `profiles/{brand_id}/v{version}/...`
+
+Access MinIO console at http://localhost:9001 (default: minioadmin/minioadmin123)
+
+## Configuration
+
+Key environment variables (see `.env.example`):
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection | `postgresql://...` |
+| `REDIS_URL` | Redis connection | `redis://localhost:6379/0` |
+| `MINIO_ENDPOINT` | MinIO endpoint | `localhost:9000` |
+| `MINIO_ACCESS_KEY` | MinIO access key | `minioadmin` |
+| `MINIO_SECRET_KEY` | MinIO secret key | `minioadmin123` |
+| `SECRET_KEY` | JWT signing key | Change in production! |
+| `OPENAI_API_KEY` | Optional: OpenAI for advanced analysis | (empty = mock provider) |
+| `MAX_UPLOAD_SIZE_MB` | Max upload size | `100` |
+| `NEXT_PUBLIC_API_URL` | API URL for web frontend | `http://localhost:8000` |
+
+## AI Providers
+
+By default, the system uses mock providers for tone and imagery analysis.
+To enable OpenAI-powered analysis:
+
+```bash
+export OPENAI_API_KEY="your-api-key"
+```
+
+The system will automatically use OpenAI for more accurate tone analysis.
+
+## Testing
+
+Run tests with pytest:
+
+```bash
+# Install test dependencies
+pip install pytest pytest-asyncio httpx
+
+# Run all tests
+pytest tests/ -v
+
+# Run specific tests
+pytest tests/test_api.py::TestAuth -v
+```
+
+## Development
+
+### Running Locally (without Docker)
+
+```bash
+# Install dependencies
+cd apps/api
+pip install -r requirements.txt
+
+# Set environment variables
+export DATABASE_URL="postgresql://..."
+export REDIS_URL="redis://..."
+
+# Run API
+uvicorn app.main:app --reload
+
+# In another terminal, run worker
+cd apps/worker
+pip install -r requirements.txt
+rq worker high default low
+```
+
+### Adding New Analyzers
+
+1. Create analyzer in `apps/worker/app/analyzers/`
+2. Implement the analysis logic
+3. Register in `BrandAnalyzer.analyze()`
+4. Update `BrandProfileSchema` if needed
+
+### Adding New Providers
+
+1. Create provider in `apps/worker/app/providers/`
+2. Implement the provider interface
+3. Add environment variable for API key
+4. Update `get_*_provider()` to use new provider
+
+## API Endpoints Summary
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/auth/register` | Register new user |
+| POST | `/api/v1/auth/login` | Login and get token |
+| GET | `/api/v1/users/me` | Get current user |
+| GET/POST | `/api/v1/brands` | List/Create brands |
+| GET/PUT/DELETE | `/api/v1/brands/{id}` | Brand CRUD |
+| POST | `/api/v1/brands/{id}/members` | Add member to brand |
+| POST | `/api/v1/brands/{id}/uploads` | Upload document |
+| POST | `/api/v1/brands/{id}/analyze` | Start analysis job |
+| GET | `/api/v1/brands/{id}/profiles` | List profile versions |
+| GET | `/api/v1/brands/{id}/profiles/{v}` | Get profile version |
+| POST | `/api/v1/brands/{id}/generate/website` | Generate website |
+| POST | `/api/v1/brands/{id}/generate/newsletter` | Generate newsletter |
+| GET | `/api/v1/jobs/{id}` | Get job status |
+| GET | `/api/v1/outputs/{id}/download` | Download output |
+
+## License
+
+Proprietary - All rights reserved.
