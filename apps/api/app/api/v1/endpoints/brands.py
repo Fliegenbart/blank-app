@@ -65,7 +65,28 @@ def create_brand(
     db.commit()
     db.refresh(brand)
 
-    return brand
+    # Construct response with properly formatted members
+    members = [
+        BrandMemberResponse(
+            id=membership.id,
+            user_id=current_user.id,
+            email=current_user.email,
+            full_name=current_user.full_name,
+            role=membership.role,
+            created_at=membership.created_at,
+        )
+    ]
+
+    return BrandResponse(
+        id=brand.id,
+        name=brand.name,
+        slug=brand.slug,
+        description=brand.description,
+        organization_id=brand.organization_id,
+        created_at=brand.created_at,
+        updated_at=brand.updated_at,
+        members=members,
+    )
 
 
 @router.get("", response_model=List[BrandResponse])
@@ -83,7 +104,21 @@ def list_brands(
             .filter(BrandMember.user_id == current_user.id)
             .all()
         )
-    return brands
+
+    # Convert to response without members (for list view)
+    return [
+        BrandResponse(
+            id=brand.id,
+            name=brand.name,
+            slug=brand.slug,
+            description=brand.description,
+            organization_id=brand.organization_id,
+            created_at=brand.created_at,
+            updated_at=brand.updated_at,
+            members=None,
+        )
+        for brand in brands
+    ]
 
 
 @router.get("/{brand_id}", response_model=BrandResponse)
@@ -149,7 +184,16 @@ def update_brand(
     db.commit()
     db.refresh(brand)
 
-    return brand
+    return BrandResponse(
+        id=brand.id,
+        name=brand.name,
+        slug=brand.slug,
+        description=brand.description,
+        organization_id=brand.organization_id,
+        created_at=brand.created_at,
+        updated_at=brand.updated_at,
+        members=None,
+    )
 
 
 @router.delete("/{brand_id}", status_code=status.HTTP_204_NO_CONTENT)
