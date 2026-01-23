@@ -147,7 +147,7 @@ def create_reference(
 
     # Audit log
     audit = AuditService(db)
-    audit.log_action(
+    audit.log(
         action="reference_created",
         resource_type="reference",
         resource_id=reference.id,
