@@ -25,6 +25,7 @@ class Settings(BaseSettings):
 
     # AI Providers
     OPENAI_API_KEY: Optional[str] = None
+    ANTHROPIC_API_KEY: Optional[str] = None
 
     # Logging
     LOG_LEVEL: str = "INFO"
