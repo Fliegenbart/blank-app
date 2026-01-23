@@ -11,13 +11,14 @@ import {
   Sparkles,
   FileOutput,
   Users,
+  Layers,
 } from "lucide-react";
 
 const navItems = [
   { href: "overview", label: "Overview", icon: LayoutDashboard },
   { href: "uploads", label: "Uploads & Jobs", icon: Upload },
   { href: "profiles", label: "Brand Profiles", icon: Palette },
-  { href: "assets", label: "Assets", icon: Image },
+  { href: "themes", label: "Themes", icon: Layers },
   { href: "generate", label: "Generate", icon: Sparkles },
   { href: "outputs", label: "Outputs", icon: FileOutput },
   { href: "team", label: "Team", icon: Users },

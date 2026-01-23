@@ -92,6 +92,39 @@ class JobQueueService:
         logger.info("Enqueued generate_email job", job_id=job_id, rq_job_id=rq_job.id)
         return rq_job.id
 
+    def enqueue_job(self, job_id: str, task_name: str) -> str:
+        """Enqueue a job by task name (generic method)."""
+        task_mapping = {
+            "analyze_upload": "app.tasks.analyze.analyze_upload",
+            "generate_website": "app.tasks.generate.generate_website",
+            "generate_newsletter": "app.tasks.generate.generate_newsletter",
+            "generate_landing_page": "app.tasks.generate.generate_landing_page",
+            "generate_social_media": "app.tasks.generate.generate_social_media",
+            "generate_email": "app.tasks.generate.generate_email",
+            "scrape_reference": "app.tasks.scrape.scrape_reference",
+            # Theme asset generation
+            "generate_flyer": "app.tasks.theme_generate.generate_flyer",
+            "generate_brochure": "app.tasks.theme_generate.generate_brochure",
+            "generate_teaser_script": "app.tasks.theme_generate.generate_teaser_script",
+            "generate_presentation": "app.tasks.theme_generate.generate_presentation",
+            "generate_banner_ads": "app.tasks.theme_generate.generate_banner_ads",
+            # Export tasks
+            "export_print_pdf": "app.tasks.export.export_print_pdf",
+            "export_figma": "app.tasks.export.export_figma",
+        }
+
+        task_path = task_mapping.get(task_name)
+        if not task_path:
+            raise ValueError(f"Unknown task name: {task_name}")
+
+        rq_job = self.default_queue.enqueue(
+            task_path,
+            job_id,
+            job_timeout="20m",
+        )
+        logger.info("Enqueued job", job_id=job_id, task_name=task_name, rq_job_id=rq_job.id)
+        return rq_job.id
+
     def get_job_status(self, rq_job_id: str) -> Optional[Dict[str, Any]]:
         """Get the status of an RQ job."""
         try:

@@ -47,6 +47,23 @@ const JOB_STEPS = {
     { key: "mjml", label: "Converting to MJML", description: "Building email template" },
     { key: "packaging", label: "Packaging", description: "Finalizing output" },
   ],
+  generate_landing_page: [
+    { key: "loading", label: "Loading Profile", description: "Fetching brand data" },
+    { key: "generating", label: "Generating Content", description: "Creating landing page" },
+    { key: "styling", label: "Applying Styles", description: "Adding brand styling" },
+    { key: "packaging", label: "Packaging", description: "Creating downloadable ZIP" },
+  ],
+  generate_social_media: [
+    { key: "loading", label: "Loading Profile", description: "Fetching brand data" },
+    { key: "generating", label: "Generating Posts", description: "Creating platform content" },
+    { key: "packaging", label: "Packaging", description: "Finalizing output" },
+  ],
+  generate_email: [
+    { key: "loading", label: "Loading Profile", description: "Fetching brand data" },
+    { key: "generating", label: "Generating Content", description: "Creating email template" },
+    { key: "mjml", label: "Converting to MJML", description: "Building responsive email" },
+    { key: "packaging", label: "Packaging", description: "Finalizing output" },
+  ],
 };
 
 export default function JobDetailPage() {
@@ -344,7 +361,11 @@ export default function JobDetailPage() {
                       </Link>
                     </Button>
                   )}
-                  {(job.job_type === "generate_website" || job.job_type === "generate_newsletter") &&
+                  {(job.job_type === "generate_website" ||
+                    job.job_type === "generate_newsletter" ||
+                    job.job_type === "generate_landing_page" ||
+                    job.job_type === "generate_social_media" ||
+                    job.job_type === "generate_email") &&
                     job.result?.output_id && (
                       <Button className="w-full" asChild>
                         <Link href={`/brands/${job.brand_id}/outputs`}>

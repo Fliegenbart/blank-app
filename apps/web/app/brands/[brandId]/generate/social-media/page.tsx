@@ -75,7 +75,7 @@ export default function SocialMediaGeneratePage() {
       const job = await api.post<Job>(`/brands/${brand.id}/generate/social-media`, {
         topic,
         platforms: selectedPlatforms,
-        reference_id: referenceId || undefined,
+        reference_id: referenceId && referenceId !== "none" ? referenceId : undefined,
         profile_version: profileVersion ? parseInt(profileVersion) : undefined,
       });
 
@@ -227,7 +227,7 @@ export default function SocialMediaGeneratePage() {
                     <SelectValue placeholder="No reference - generate fresh content" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No reference</SelectItem>
+                    <SelectItem value="none">No reference</SelectItem>
                     {references.map((ref) => (
                       <SelectItem key={ref.id} value={ref.id}>
                         {ref.name} ({ref.page_count} pages)

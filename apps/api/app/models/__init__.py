@@ -8,6 +8,16 @@ from app.models.brand_profile import BrandProfile
 from app.models.output import Output
 from app.models.audit_log import AuditLog
 from app.models.reference import Reference, ReferenceStatus
+from app.models.theme import (
+    Theme,
+    ThemeStatus,
+    ThemeDocument,
+    ThemeAsset,
+    ThemeJob,
+    AssetType,
+    AssetStatus,
+    DocumentType,
+)
 
 __all__ = [
     "Base",
@@ -25,4 +35,13 @@ __all__ = [
     "AuditLog",
     "Reference",
     "ReferenceStatus",
+    # Theme models
+    "Theme",
+    "ThemeStatus",
+    "ThemeDocument",
+    "ThemeAsset",
+    "ThemeJob",
+    "AssetType",
+    "AssetStatus",
+    "DocumentType",
 ]

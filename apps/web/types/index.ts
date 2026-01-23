@@ -341,3 +341,126 @@ export interface EmailGenerateRequest {
   reference_id?: string;
   profile_version?: number;
 }
+
+// Theme types
+export type ThemeStatus = "draft" | "ready" | "generating" | "completed";
+export type AssetType =
+  | "website"
+  | "landing_page"
+  | "newsletter"
+  | "flyer"
+  | "brochure"
+  | "teaser_script"
+  | "social_media"
+  | "presentation"
+  | "banner_ads";
+export type AssetStatus = "pending" | "generating" | "completed" | "failed";
+
+export interface Theme {
+  id: string;
+  brand_id: string;
+  created_by: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  status: ThemeStatus;
+  context: Record<string, any> | null;
+  asset_config: Record<string, any> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ThemeListItem {
+  id: string;
+  brand_id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  status: ThemeStatus;
+  document_count: number;
+  asset_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ThemeDocument {
+  id: string;
+  theme_id: string;
+  uploaded_by: string;
+  name: string;
+  original_filename: string;
+  document_type: string;
+  file_type: string;
+  file_size: number;
+  status: string;
+  extracted_text: string | null;
+  summary: Record<string, any> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ThemeAsset {
+  id: string;
+  theme_id: string;
+  job_id: string | null;
+  asset_type: AssetType;
+  name: string;
+  status: AssetStatus;
+  storage_path: string | null;
+  preview_path: string | null;
+  file_size: number | null;
+  content_type: string | null;
+  print_pdf_path: string | null;
+  figma_file_key: string | null;
+  variants: Record<string, any> | null;
+  metadata: Record<string, any> | null;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ThemeJob {
+  id: string;
+  theme_id: string;
+  created_by: string;
+  status: string;
+  total_assets: number;
+  completed_assets: number;
+  failed_assets: number;
+  progress: number;
+  asset_job_ids: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ThemeCreateRequest {
+  name: string;
+  slug?: string;
+  description?: string;
+  context?: Record<string, any>;
+  asset_config?: Record<string, any>;
+}
+
+export interface ThemeUpdateRequest {
+  name?: string;
+  slug?: string;
+  description?: string;
+  status?: ThemeStatus;
+  context?: Record<string, any>;
+  asset_config?: Record<string, any>;
+}
+
+export interface GenerateAllAssetsRequest {
+  asset_types: AssetType[];
+  profile_version?: number;
+}
+
+export interface GenerateSingleAssetRequest {
+  profile_version?: number;
+  params?: Record<string, any>;
+}
+
+export interface RegenerateAssetRequest {
+  profile_version?: number;
+  params?: Record<string, any>;
+}

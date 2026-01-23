@@ -32,6 +32,7 @@ class Brand(Base, TimestampMixin):
     jobs = relationship("Job", back_populates="brand", cascade="all, delete-orphan")
     outputs = relationship("Output", back_populates="brand", cascade="all, delete-orphan")
     references = relationship("Reference", back_populates="brand", cascade="all, delete-orphan")
+    themes = relationship("Theme", back_populates="brand", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Brand {self.name}>"

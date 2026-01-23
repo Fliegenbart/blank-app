@@ -18,13 +18,31 @@ class JobStatus(str, enum.Enum):
 class JobType(str, enum.Enum):
     """Job type enum."""
 
+    # Analysis
     ANALYZE = "analyze"
+    SCRAPE_REFERENCE = "scrape_reference"
+
+    # Basic generation
     GENERATE_WEBSITE = "generate_website"
     GENERATE_NEWSLETTER = "generate_newsletter"
-    SCRAPE_REFERENCE = "scrape_reference"
     GENERATE_LANDING_PAGE = "generate_landing_page"
     GENERATE_SOCIAL_MEDIA = "generate_social_media"
     GENERATE_EMAIL = "generate_email"
+
+    # Theme-based generation
+    GENERATE_THEME_ASSETS = "generate_theme_assets"
+    GENERATE_FLYER = "generate_flyer"
+    GENERATE_BROCHURE = "generate_brochure"
+    GENERATE_TEASER_SCRIPT = "generate_teaser_script"
+    GENERATE_PRESENTATION = "generate_presentation"
+    GENERATE_BANNER_ADS = "generate_banner_ads"
+
+    # Export
+    EXPORT_PRINT_PDF = "export_print_pdf"
+    EXPORT_FIGMA = "export_figma"
+
+    # Document processing
+    EXTRACT_DOCUMENT = "extract_document"
 
 
 class Job(Base, TimestampMixin):

@@ -46,6 +46,11 @@ class ContentProvider(ABC):
         """Generate content for an email."""
         pass
 
+    @abstractmethod
+    def generate_json(self, prompt: str) -> Dict[str, Any]:
+        """Generate JSON content from a prompt."""
+        pass
+
 
 class MockContentProvider(ContentProvider):
     """Mock content provider for testing without API calls."""
@@ -206,6 +211,11 @@ class MockContentProvider(ContentProvider):
                 "cta": {"text": "Read More", "url": "#"},
                 "closing": f"Thank you for your continued support.\n{brand_name}",
             }
+
+    def generate_json(self, prompt: str) -> Dict[str, Any]:
+        """Generate JSON from prompt - returns empty dict for mock."""
+        logger.warning("MockContentProvider.generate_json called, returning empty dict")
+        return {}
 
 
 class OpenAIContentProvider(ContentProvider):
@@ -477,6 +487,55 @@ Create compelling, on-brand email content that drives action."""
             return MockContentProvider().generate_email_content(
                 brand_profile, topic, email_type, reference_structure
             )
+
+    def generate_json(self, prompt: str) -> Dict[str, Any]:
+        """Generate JSON content from a prompt using OpenAI."""
+        if not self.client:
+            logger.warning("OpenAI client not available, returning empty dict")
+            return {}
+
+        system_prompt = """You are a professional content creator.
+Generate content based on the user's request and respond with valid JSON only.
+Do not include any text outside the JSON object.
+Ensure all JSON is properly formatted and can be parsed."""
+
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=2000,
+            )
+
+            content = response.choices[0].message.content.strip()
+
+            # Try to extract JSON if wrapped in code blocks
+            if content.startswith("```"):
+                lines = content.split("\n")
+                json_lines = []
+                in_json = False
+                for line in lines:
+                    if line.startswith("```json"):
+                        in_json = True
+                        continue
+                    if line.startswith("```"):
+                        in_json = False
+                        continue
+                    if in_json:
+                        json_lines.append(line)
+                content = "\n".join(json_lines)
+
+            return json.loads(content)
+
+        except json.JSONDecodeError as e:
+            logger.error("Failed to parse JSON from OpenAI response", error=str(e))
+            return {}
+        except Exception as e:
+            logger.error("OpenAI JSON generation failed", error=str(e))
+            return {}
 
 
 @lru_cache()

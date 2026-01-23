@@ -15,6 +15,22 @@ from app.schemas.brand_profile import (
 )
 from app.schemas.output import OutputResponse
 from app.schemas.generator import WebsiteGenerateRequest, NewsletterGenerateRequest
+from app.schemas.theme import (
+    ThemeCreate,
+    ThemeUpdate,
+    ThemeResponse,
+    ThemeListResponse,
+    ThemeDocumentCreate,
+    ThemeDocumentResponse,
+    ThemeAssetResponse,
+    ThemeJobResponse,
+    GenerateAllAssetsRequest,
+    GenerateSingleAssetRequest,
+    RegenerateAssetRequest,
+    ExportPrintRequest,
+    ExportFigmaRequest,
+    BatchExportRequest,
+)
 
 __all__ = [
     "UserCreate",
@@ -41,4 +57,19 @@ __all__ = [
     "OutputResponse",
     "WebsiteGenerateRequest",
     "NewsletterGenerateRequest",
+    # Theme schemas
+    "ThemeCreate",
+    "ThemeUpdate",
+    "ThemeResponse",
+    "ThemeListResponse",
+    "ThemeDocumentCreate",
+    "ThemeDocumentResponse",
+    "ThemeAssetResponse",
+    "ThemeJobResponse",
+    "GenerateAllAssetsRequest",
+    "GenerateSingleAssetRequest",
+    "RegenerateAssetRequest",
+    "ExportPrintRequest",
+    "ExportFigmaRequest",
+    "BatchExportRequest",
 ]

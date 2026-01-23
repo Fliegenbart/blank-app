@@ -78,7 +78,7 @@ export default function LandingPageGeneratePage() {
       const job = await api.post<Job>(`/brands/${brand.id}/generate/landing-page`, {
         topic,
         sections: selectedSections.length > 0 ? selectedSections : undefined,
-        reference_id: referenceId || undefined,
+        reference_id: referenceId && referenceId !== "none" ? referenceId : undefined,
         profile_version: profileVersion ? parseInt(profileVersion) : undefined,
       });
 
@@ -221,7 +221,7 @@ export default function LandingPageGeneratePage() {
                     <SelectValue placeholder="No reference - generate fresh content" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No reference</SelectItem>
+                    <SelectItem value="none">No reference</SelectItem>
                     {references.map((ref) => (
                       <SelectItem key={ref.id} value={ref.id}>
                         {ref.name} ({ref.page_count} pages)
