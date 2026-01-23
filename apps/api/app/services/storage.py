@@ -182,6 +182,95 @@ class LocalStorageBackend(StorageBackend):
         return os.path.exists(self._get_full_path(path))
 
 
+class DatabaseStorageBackend(StorageBackend):
+    """PostgreSQL database storage backend - stores files as BLOBs."""
+
+    def put_file(self, path: str, data: BinaryIO, content_type: str = "application/octet-stream") -> str:
+        """Store a file in database."""
+        from app.core.database import SessionLocal
+        from app.models.file_blob import FileBlob
+
+        file_data = data.read()
+        size = len(file_data)
+
+        db = SessionLocal()
+        try:
+            # Check if file already exists
+            existing = db.query(FileBlob).filter(FileBlob.path == path).first()
+            if existing:
+                existing.data = file_data
+                existing.content_type = content_type
+                existing.size = size
+            else:
+                blob = FileBlob(
+                    path=path,
+                    data=file_data,
+                    content_type=content_type,
+                    size=size,
+                )
+                db.add(blob)
+            db.commit()
+            logger.info("Stored file in database", path=path, size=size)
+            return path
+        except Exception as e:
+            db.rollback()
+            logger.error("Failed to store file in database", path=path, error=str(e))
+            raise
+        finally:
+            db.close()
+
+    def get_file(self, path: str) -> Optional[bytes]:
+        """Retrieve a file from database."""
+        from app.core.database import SessionLocal
+        from app.models.file_blob import FileBlob
+
+        db = SessionLocal()
+        try:
+            blob = db.query(FileBlob).filter(FileBlob.path == path).first()
+            if blob:
+                return blob.data
+            logger.error("File not found in database", path=path)
+            return None
+        finally:
+            db.close()
+
+    def delete_file(self, path: str) -> bool:
+        """Delete a file from database."""
+        from app.core.database import SessionLocal
+        from app.models.file_blob import FileBlob
+
+        db = SessionLocal()
+        try:
+            blob = db.query(FileBlob).filter(FileBlob.path == path).first()
+            if blob:
+                db.delete(blob)
+                db.commit()
+                logger.info("Deleted file from database", path=path)
+                return True
+            return False
+        except Exception as e:
+            db.rollback()
+            logger.error("Failed to delete file from database", path=path, error=str(e))
+            return False
+        finally:
+            db.close()
+
+    def get_presigned_url(self, path: str, expires: int = 3600) -> Optional[str]:
+        """Database storage doesn't support presigned URLs."""
+        return None
+
+    def file_exists(self, path: str) -> bool:
+        """Check if a file exists in database."""
+        from app.core.database import SessionLocal
+        from app.models.file_blob import FileBlob
+
+        db = SessionLocal()
+        try:
+            return db.query(FileBlob).filter(FileBlob.path == path).first() is not None
+        finally:
+            db.close()
+
+
 class StorageService:
     """High-level storage service with backend abstraction."""
 
@@ -234,7 +323,7 @@ def get_storage_service() -> StorageService:
         try:
             backend = MinIOBackend()
         except Exception as e:
-            logger.warning("MinIO unavailable, falling back to local storage", error=str(e))
-            backend = LocalStorageBackend()
+            logger.warning("MinIO unavailable, falling back to database storage", error=str(e))
+            backend = DatabaseStorageBackend()
 
     return StorageService(backend)

@@ -127,6 +127,140 @@ class LocalStorageBackend(StorageBackend):
         return os.path.exists(self._get_full_path(path))
 
 
+class DatabaseStorageBackend(StorageBackend):
+    """PostgreSQL database storage backend - stores files as BLOBs."""
+
+    def put_file(self, path: str, data: BinaryIO, content_type: str = "application/octet-stream") -> str:
+        """Store a file in database."""
+        from app.database import SessionLocal
+        from sqlalchemy import Column, String, Integer, LargeBinary, DateTime, func
+        from sqlalchemy.orm import declarative_base
+        import uuid
+
+        Base = declarative_base()
+
+        class FileBlob(Base):
+            __tablename__ = "file_blobs"
+            id = Column(String(36), primary_key=True)
+            path = Column(String(500), nullable=False, unique=True, index=True)
+            data = Column(LargeBinary, nullable=False)
+            content_type = Column(String(100), nullable=False)
+            size = Column(Integer, nullable=False)
+            created_at = Column(DateTime, nullable=False, server_default=func.now())
+
+        file_data = data.read()
+        size = len(file_data)
+
+        db = SessionLocal()
+        try:
+            existing = db.query(FileBlob).filter(FileBlob.path == path).first()
+            if existing:
+                existing.data = file_data
+                existing.content_type = content_type
+                existing.size = size
+            else:
+                blob = FileBlob(
+                    id=str(uuid.uuid4()),
+                    path=path,
+                    data=file_data,
+                    content_type=content_type,
+                    size=size,
+                )
+                db.add(blob)
+            db.commit()
+            logger.info("Stored file in database", path=path, size=size)
+            return path
+        except Exception as e:
+            db.rollback()
+            logger.error("Failed to store file in database", path=path, error=str(e))
+            raise
+        finally:
+            db.close()
+
+    def get_file(self, path: str) -> Optional[bytes]:
+        """Retrieve a file from database."""
+        from app.database import SessionLocal
+        from sqlalchemy import Column, String, Integer, LargeBinary, DateTime, func
+        from sqlalchemy.orm import declarative_base
+
+        Base = declarative_base()
+
+        class FileBlob(Base):
+            __tablename__ = "file_blobs"
+            id = Column(String(36), primary_key=True)
+            path = Column(String(500), nullable=False, unique=True, index=True)
+            data = Column(LargeBinary, nullable=False)
+            content_type = Column(String(100), nullable=False)
+            size = Column(Integer, nullable=False)
+            created_at = Column(DateTime, nullable=False, server_default=func.now())
+
+        db = SessionLocal()
+        try:
+            blob = db.query(FileBlob).filter(FileBlob.path == path).first()
+            if blob:
+                return blob.data
+            logger.error("File not found in database", path=path)
+            return None
+        finally:
+            db.close()
+
+    def delete_file(self, path: str) -> bool:
+        """Delete a file from database."""
+        from app.database import SessionLocal
+        from sqlalchemy import Column, String, Integer, LargeBinary, DateTime, func
+        from sqlalchemy.orm import declarative_base
+
+        Base = declarative_base()
+
+        class FileBlob(Base):
+            __tablename__ = "file_blobs"
+            id = Column(String(36), primary_key=True)
+            path = Column(String(500), nullable=False, unique=True, index=True)
+            data = Column(LargeBinary, nullable=False)
+            content_type = Column(String(100), nullable=False)
+            size = Column(Integer, nullable=False)
+            created_at = Column(DateTime, nullable=False, server_default=func.now())
+
+        db = SessionLocal()
+        try:
+            blob = db.query(FileBlob).filter(FileBlob.path == path).first()
+            if blob:
+                db.delete(blob)
+                db.commit()
+                logger.info("Deleted file from database", path=path)
+                return True
+            return False
+        except Exception as e:
+            db.rollback()
+            logger.error("Failed to delete file from database", path=path, error=str(e))
+            return False
+        finally:
+            db.close()
+
+    def file_exists(self, path: str) -> bool:
+        """Check if a file exists in database."""
+        from app.database import SessionLocal
+        from sqlalchemy import Column, String, Integer, LargeBinary, DateTime, func
+        from sqlalchemy.orm import declarative_base
+
+        Base = declarative_base()
+
+        class FileBlob(Base):
+            __tablename__ = "file_blobs"
+            id = Column(String(36), primary_key=True)
+            path = Column(String(500), nullable=False, unique=True, index=True)
+            data = Column(LargeBinary, nullable=False)
+            content_type = Column(String(100), nullable=False)
+            size = Column(Integer, nullable=False)
+            created_at = Column(DateTime, nullable=False, server_default=func.now())
+
+        db = SessionLocal()
+        try:
+            return db.query(FileBlob).filter(FileBlob.path == path).first() is not None
+        finally:
+            db.close()
+
+
 class StorageService:
     """High-level storage service."""
 
@@ -158,6 +292,6 @@ def get_storage_service() -> StorageService:
         try:
             backend = MinIOBackend()
         except Exception as e:
-            logger.warning("MinIO unavailable, using local storage", error=str(e))
-            backend = LocalStorageBackend()
+            logger.warning("MinIO unavailable, using database storage", error=str(e))
+            backend = DatabaseStorageBackend()
     return StorageService(backend)
