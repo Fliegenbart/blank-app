@@ -46,6 +46,12 @@ export interface Upload {
 export type JobStatus = "pending" | "queued" | "running" | "completed" | "failed";
 export type JobType = "analyze" | "analyze_upload" | "generate_website" | "generate_newsletter";
 
+export interface JobLog {
+  timestamp: string;
+  level: string;
+  message: string;
+}
+
 export interface Job {
   id: string;
   brand_id: string;
@@ -57,7 +63,7 @@ export interface Job {
   started_at?: string;
   completed_at?: string;
   error_message: string | null;
-  logs: { timestamp: string; level: string; message: string }[];
+  logs?: JobLog[] | string | null;
   output_id: string | null;
   result?: {
     profile_version?: number;

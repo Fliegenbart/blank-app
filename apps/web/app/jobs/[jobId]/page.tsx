@@ -259,31 +259,35 @@ export default function JobDetailPage() {
             </Card>
 
             {/* Logs */}
-            {job.logs && job.logs.length > 0 && (
+            {job.logs && (Array.isArray(job.logs) ? job.logs.length > 0 : job.logs) && (
               <Card>
                 <CardHeader>
                   <CardTitle>Logs</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="bg-muted rounded-lg p-4 font-mono text-sm max-h-64 overflow-auto">
-                    {job.logs.map((log, index) => (
-                      <div key={index} className="py-0.5">
-                        <span className="text-muted-foreground">
-                          [{new Date(log.timestamp).toLocaleTimeString()}]
-                        </span>{" "}
-                        <span
-                          className={
-                            log.level === "error"
-                              ? "text-destructive"
-                              : log.level === "warning"
-                              ? "text-yellow-500"
-                              : ""
-                          }
-                        >
-                          {log.message}
-                        </span>
-                      </div>
-                    ))}
+                    {Array.isArray(job.logs) ? (
+                      job.logs.map((log, index) => (
+                        <div key={index} className="py-0.5">
+                          <span className="text-muted-foreground">
+                            [{new Date(log.timestamp).toLocaleTimeString()}]
+                          </span>{" "}
+                          <span
+                            className={
+                              log.level === "error"
+                                ? "text-destructive"
+                                : log.level === "warning"
+                                ? "text-yellow-500"
+                                : ""
+                            }
+                          >
+                            {log.message}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <pre className="whitespace-pre-wrap">{job.logs}</pre>
+                    )}
                   </div>
                 </CardContent>
               </Card>
