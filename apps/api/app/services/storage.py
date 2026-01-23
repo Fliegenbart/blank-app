@@ -313,6 +313,18 @@ class StorageService:
         """Check if a file exists."""
         return self.backend.file_exists(path)
 
+    def store(self, path: str, data: bytes, content_type: str = "application/octet-stream") -> str:
+        """Store raw bytes at a given path."""
+        return self.backend.put_file(path, io.BytesIO(data), content_type)
+
+    def get(self, path: str) -> Optional[bytes]:
+        """Get file content by path (alias for get_file)."""
+        return self.backend.get_file(path)
+
+    def delete(self, path: str) -> bool:
+        """Delete a file by path (alias for delete_file)."""
+        return self.backend.delete_file(path)
+
 
 @lru_cache()
 def get_storage_service() -> StorageService:

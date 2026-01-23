@@ -143,7 +143,7 @@ def generate_all_assets(
     db.refresh(theme_job)
 
     # Enqueue jobs
-    job_queue = JobQueueService(db)
+    job_queue = JobQueueService()
     for job_id in asset_job_ids:
         job = db.query(Job).filter(Job.id == job_id).first()
         if job:
@@ -257,7 +257,7 @@ def generate_single_asset(
     db.refresh(asset)
 
     # Enqueue job
-    job_queue = JobQueueService(db)
+    job_queue = JobQueueService()
     job_queue.enqueue_job(job.id, _get_task_name_for_asset(asset_type))
 
     return _asset_to_response(asset)
@@ -331,7 +331,7 @@ def regenerate_asset(
     db.refresh(asset)
 
     # Enqueue job
-    job_queue = JobQueueService(db)
+    job_queue = JobQueueService()
     job_queue.enqueue_job(job.id, _get_task_name_for_asset(asset.asset_type))
 
     return _asset_to_response(asset)
