@@ -7,9 +7,10 @@ import { Loader2 } from "lucide-react";
 interface JobStatusBadgeProps {
   status: JobStatus;
   progress?: number;
+  size?: "default" | "lg";
 }
 
-export function JobStatusBadge({ status, progress }: JobStatusBadgeProps) {
+export function JobStatusBadge({ status, progress, size = "default" }: JobStatusBadgeProps) {
   const variants: Record<JobStatus, "default" | "secondary" | "success" | "destructive" | "warning"> = {
     pending: "secondary",
     queued: "secondary",
@@ -27,8 +28,11 @@ export function JobStatusBadge({ status, progress }: JobStatusBadgeProps) {
   };
 
   return (
-    <Badge variant={variants[status]} className="gap-1">
-      {status === "running" && <Loader2 className="h-3 w-3 animate-spin" />}
+    <Badge
+      variant={variants[status]}
+      className={`gap-1 ${size === "lg" ? "text-sm px-3 py-1" : ""}`}
+    >
+      {status === "running" && <Loader2 className={`animate-spin ${size === "lg" ? "h-4 w-4" : "h-3 w-3"}`} />}
       {labels[status]}
     </Badge>
   );

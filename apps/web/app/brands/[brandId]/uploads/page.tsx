@@ -134,15 +134,17 @@ export default function UploadsPage() {
     }
   };
 
-  const getFileIcon = (contentType: string) => {
-    if (contentType.includes("pdf")) {
+  const getFileIcon = (fileType: string) => {
+    if (fileType === "pdf") {
       return <FileText className="h-4 w-4 text-red-500" />;
     }
-    if (contentType.includes("presentation") || contentType.includes("pptx")) {
+    if (fileType === "pptx" || fileType === "ppt") {
       return <FileText className="h-4 w-4 text-orange-500" />;
     }
     return <FileText className="h-4 w-4 text-muted-foreground" />;
   };
+
+  const isAnalyzed = (upload: Upload) => upload.status === "processed";
 
   if (!brand) return null;
 
@@ -218,7 +220,7 @@ export default function UploadsPage() {
                     <TableRow key={upload.id}>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          {getFileIcon(upload.content_type)}
+                          {getFileIcon(upload.file_type)}
                           <span className="font-medium">
                             {upload.original_filename}
                           </span>
@@ -226,7 +228,7 @@ export default function UploadsPage() {
                       </TableCell>
                       <TableCell>{formatBytes(upload.file_size)}</TableCell>
                       <TableCell>
-                        {upload.analyzed ? (
+                        {isAnalyzed(upload) ? (
                           <Badge variant="success">Analyzed</Badge>
                         ) : relatedJob ? (
                           <JobStatusBadge status={relatedJob.status} />
@@ -237,7 +239,7 @@ export default function UploadsPage() {
                       <TableCell>{formatDate(upload.created_at)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {!upload.analyzed && canEdit && (
+                          {!isAnalyzed(upload) && canEdit && (
                             <Button
                               size="sm"
                               variant="outline"

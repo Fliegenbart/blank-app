@@ -106,22 +106,22 @@ export default function ProfilesPage() {
                         {profile.tokens.colors.primary && (
                           <div
                             className="w-4 h-4 rounded border"
-                            style={{ backgroundColor: profile.tokens.colors.primary }}
-                            title={profile.tokens.colors.primary}
+                            style={{ backgroundColor: profile.tokens.colors.primary.hex }}
+                            title={profile.tokens.colors.primary.hex}
                           />
                         )}
-                        {profile.tokens.colors.secondary && (
+                        {profile.tokens.colors.secondary?.[0] && (
                           <div
                             className="w-4 h-4 rounded border"
-                            style={{ backgroundColor: profile.tokens.colors.secondary }}
-                            title={profile.tokens.colors.secondary}
+                            style={{ backgroundColor: profile.tokens.colors.secondary[0].hex }}
+                            title={profile.tokens.colors.secondary[0].hex}
                           />
                         )}
                         {profile.tokens.colors.accent && (
                           <div
                             className="w-4 h-4 rounded border"
-                            style={{ backgroundColor: profile.tokens.colors.accent }}
-                            title={profile.tokens.colors.accent}
+                            style={{ backgroundColor: profile.tokens.colors.accent.hex }}
+                            title={profile.tokens.colors.accent.hex}
                           />
                         )}
                       </div>

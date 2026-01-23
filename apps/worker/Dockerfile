@@ -22,4 +22,4 @@ COPY . .
 # Create data directory for local storage fallback
 RUN mkdir -p /data
 
-CMD ["rq", "worker", "--url", "redis://redis:6379/0", "high", "default", "low"]
+CMD ["sh", "-c", "rq worker --url ${REDIS_URL:-redis://localhost:6379/0} high default low"]

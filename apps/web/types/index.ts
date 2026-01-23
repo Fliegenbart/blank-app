@@ -22,10 +22,15 @@ export type BrandRole = "owner" | "editor" | "viewer";
 export interface BrandMember {
   id: string;
   user_id: string;
-  email: string;
-  full_name: string | null;
+  email?: string;
+  full_name?: string | null;
   role: BrandRole;
   created_at: string;
+  user?: {
+    id: string;
+    email: string;
+    full_name?: string;
+  };
 }
 
 export interface Upload {
@@ -39,7 +44,7 @@ export interface Upload {
 }
 
 export type JobStatus = "pending" | "queued" | "running" | "completed" | "failed";
-export type JobType = "analyze" | "generate_website" | "generate_newsletter";
+export type JobType = "analyze" | "analyze_upload" | "generate_website" | "generate_newsletter";
 
 export interface Job {
   id: string;
@@ -49,10 +54,21 @@ export interface Job {
   progress: number;
   created_at: string;
   updated_at: string;
+  started_at?: string;
+  completed_at?: string;
   error_message: string | null;
-  logs: string | null;
+  logs: { timestamp: string; level: string; message: string }[];
   output_id: string | null;
-  result: Record<string, any> | null;
+  result?: {
+    profile_version?: number;
+    output_id?: string;
+    [key: string]: unknown;
+  } | null;
+  input_data?: {
+    upload_id?: string;
+    filename?: string;
+    [key: string]: unknown;
+  };
 }
 
 export interface ColorValue {
@@ -134,14 +150,56 @@ export interface BrandProfileData {
   confidence: ConfidenceScores;
 }
 
+export interface BrandImageryExtended {
+  style?: string;
+  subjects?: string[];
+  mood?: string;
+  treatments?: string[];
+  photo_vs_illustration?: string;
+  motifs?: string[];
+  style_notes?: string | null;
+}
+
+export interface BrandTokens {
+  colors?: BrandColors;
+  typography?: {
+    primary_font?: string;
+    secondary_font?: string;
+    heading_style?: string;
+    body_style?: string;
+  };
+  spacing?: {
+    base_unit?: string;
+    scale?: string;
+    grid_columns?: number;
+  };
+}
+
 export interface BrandProfile {
   id: string;
   brand_id: string;
   version: number;
-  profile: BrandProfileData;
+  profile?: BrandProfileData;
   summary_md: string | null;
   source_upload_id: string | null;
   created_at: string;
+  // Flattened properties from BrandProfileData
+  identity?: BrandIdentity;
+  colors?: BrandColors;
+  typography?: BrandTypography;
+  layout_system?: LayoutSystem;
+  imagery?: BrandImageryExtended;
+  tone_of_voice?: ToneOfVoice;
+  confidence?: ConfidenceScores;
+  tokens?: BrandTokens;
+  tone?: {
+    voice?: string;
+    personality?: string[];
+    dos?: string[];
+    donts?: string[];
+    examples?: string[];
+  };
+  evidence?: Record<string, unknown>;
 }
 
 export interface Output {
@@ -149,9 +207,11 @@ export interface Output {
   brand_id: string;
   output_type: string;
   name: string;
+  filename: string;
   description: string | null;
-  file_size: number | null;
-  content_type: string | null;
+  file_size: number;
+  content_type: string;
+  profile_version: number;
   created_at: string;
   download_url: string | null;
   metadata: Record<string, any> | null;
@@ -165,17 +225,23 @@ export interface PageConfig {
 }
 
 export interface WebsiteGenerateRequest {
-  topic: string;
-  pages: PageConfig[];
-  brief?: string;
   profile_version?: number;
+  page_title?: string;
+  headline?: string;
+  subheadline?: string;
+  cta_text?: string;
+  cta_url?: string;
+  sections?: string[];
+  additional_notes?: string;
 }
 
 export interface NewsletterGenerateRequest {
-  topic: string;
-  offer?: string;
-  cta: string;
-  subject_line?: string;
-  preview_text?: string;
   profile_version?: number;
+  subject?: string;
+  preheader?: string;
+  headline?: string;
+  body_content?: string;
+  cta_text?: string;
+  cta_url?: string;
+  footer_text?: string;
 }

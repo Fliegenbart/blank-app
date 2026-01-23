@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -16,7 +16,7 @@ import * as api from "@/lib/api";
 import type { Brand } from "@/types";
 import { formatDate } from "@/lib/utils";
 
-export default function BrandsPage() {
+function BrandsPageContent() {
   const { user, token, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -219,5 +219,17 @@ export default function BrandsPage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function BrandsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    }>
+      <BrandsPageContent />
+    </Suspense>
   );
 }

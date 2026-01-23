@@ -13,7 +13,6 @@ python-magic==0.4.27
 # Document parsing
 python-pptx==0.6.23
 pdfplumber==0.10.3
-pdfminer.six==20231228
 Pillow==10.2.0
 lxml==5.1.0
 

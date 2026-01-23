@@ -4,9 +4,14 @@ import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Upload, FileText, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/use-auth";
+import * as api from "@/lib/api";
+import type { Upload as UploadType } from "@/types";
 
 interface UploadDropzoneProps {
-  onUpload: (file: File) => Promise<void>;
+  onUpload?: (file: File) => Promise<void>;
+  brandId?: string;
+  onUploadComplete?: (upload: UploadType) => void;
   accept?: Record<string, string[]>;
   maxSize?: number;
   disabled?: boolean;
@@ -14,6 +19,8 @@ interface UploadDropzoneProps {
 
 export function UploadDropzone({
   onUpload,
+  brandId,
+  onUploadComplete,
   accept = {
     "application/pdf": [".pdf"],
     "application/vnd.openxmlformats-officedocument.presentationml.presentation": [".pptx"],
@@ -22,6 +29,7 @@ export function UploadDropzone({
   maxSize = 100 * 1024 * 1024, // 100MB
   disabled = false,
 }: UploadDropzoneProps) {
+  const { token } = useAuth();
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,14 +42,19 @@ export function UploadDropzone({
       setError(null);
 
       try {
-        await onUpload(file);
+        if (onUpload) {
+          await onUpload(file);
+        } else if (brandId && token) {
+          const upload = await api.uploadFile(token, brandId, file);
+          onUploadComplete?.(upload);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Upload failed");
       } finally {
         setIsUploading(false);
       }
     },
-    [onUpload]
+    [onUpload, brandId, token, onUploadComplete]
   );
 
   const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
