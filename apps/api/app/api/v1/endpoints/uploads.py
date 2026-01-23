@@ -138,11 +138,21 @@ def delete_upload(
     db: Session = Depends(get_db),
 ):
     """Delete an upload."""
+    from app.models.job import Job
+
     upload = db.query(Upload).filter(Upload.id == upload_id, Upload.brand_id == brand_id).first()
     if not upload:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Upload not found",
+        )
+
+    # Check for associated jobs
+    associated_jobs = db.query(Job).filter(Job.upload_id == upload_id).count()
+    if associated_jobs > 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Cannot delete upload: {associated_jobs} job(s) are associated with this upload",
         )
 
     # Delete from storage
