@@ -5,7 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db, get_current_user, get_brand_member
+from app.core.database import get_db
+from app.api.v1.dependencies.auth import get_current_active_user as get_current_user
+from app.api.v1.dependencies.rbac import require_brand_access as get_brand_member
 from app.models import (
     User, BrandMember, BrandRole,
     Theme, ThemeAsset, AssetStatus, Job, JobType, JobStatus
