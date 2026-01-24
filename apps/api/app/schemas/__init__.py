@@ -1,5 +1,12 @@
 from app.schemas.user import UserCreate, UserLogin, UserResponse, Token
-from app.schemas.brand import BrandCreate, BrandUpdate, BrandResponse, BrandMemberCreate, BrandMemberResponse
+from app.schemas.brand import (
+    BrandCreate,
+    BrandUpdate,
+    BrandResponse,
+    BrandMemberCreate,
+    BrandMemberResponse,
+    BrandMemberUpdate,
+)
 from app.schemas.upload import UploadResponse
 from app.schemas.job import JobResponse, JobCreate
 from app.schemas.brand_profile import (
@@ -42,6 +49,7 @@ __all__ = [
     "BrandResponse",
     "BrandMemberCreate",
     "BrandMemberResponse",
+    "BrandMemberUpdate",
     "UploadResponse",
     "JobResponse",
     "JobCreate",

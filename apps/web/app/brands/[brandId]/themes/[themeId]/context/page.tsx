@@ -29,11 +29,11 @@ import {
   FileText,
   File,
   Trash2,
-  Download,
   Clock,
   CheckCircle,
   AlertCircle,
   Loader2,
+  RefreshCw,
 } from "lucide-react";
 import type { ThemeDocument } from "@/types";
 
@@ -93,6 +93,15 @@ export default function ThemeContextPage() {
     loadDocuments();
   }, [loadDocuments]);
 
+  useEffect(() => {
+    const hasActive = documents.some((doc) =>
+      ["queued", "processing"].includes(doc.status)
+    );
+    if (!hasActive) return;
+    const interval = setInterval(loadDocuments, 4000);
+    return () => clearInterval(interval);
+  }, [documents, loadDocuments]);
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -139,6 +148,15 @@ export default function ThemeContextPage() {
       setDocuments(documents.filter((d) => d.id !== docId));
     } catch (err) {
       console.error("Error deleting document:", err);
+    }
+  };
+
+  const handleRetryExtract = async (docId: string) => {
+    try {
+      await api.post(`/brands/${brandId}/themes/${themeId}/documents/${docId}/extract`, {});
+      await loadDocuments();
+    } catch (err) {
+      console.error("Error retrying extraction:", err);
     }
   };
 
@@ -230,11 +248,17 @@ export default function ThemeContextPage() {
                     </Badge>
                     <span>{formatFileSize(doc.file_size)}</span>
                   </div>
-                  <div className="flex items-center gap-1 text-muted-foreground">
+                  <div className="flex items-center gap-2 text-muted-foreground">
                     {doc.status === "uploaded" && (
                       <>
                         <CheckCircle className="h-3 w-3 text-green-600" />
                         <span className="text-xs">Uploaded</span>
+                      </>
+                    )}
+                    {doc.status === "queued" && (
+                      <>
+                        <Clock className="h-3 w-3" />
+                        <span className="text-xs">Queued</span>
                       </>
                     )}
                     {doc.status === "processing" && (
@@ -243,15 +267,37 @@ export default function ThemeContextPage() {
                         <span className="text-xs">Processing</span>
                       </>
                     )}
+                    {doc.status === "completed" && (
+                      <>
+                        <CheckCircle className="h-3 w-3 text-green-600" />
+                        <span className="text-xs">Complete</span>
+                      </>
+                    )}
                     {doc.status === "failed" && (
                       <>
                         <AlertCircle className="h-3 w-3 text-destructive" />
                         <span className="text-xs">Failed</span>
                       </>
                     )}
+                    {doc.status === "failed" && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => handleRetryExtract(doc.id)}
+                      >
+                        <RefreshCw className="h-3 w-3 mr-1" />
+                        Retry
+                      </Button>
+                    )}
                   </div>
                 </div>
-                {doc.summary && (
+                {doc.extracted_text && (
+                  <p className="text-sm text-muted-foreground mt-3 line-clamp-3">
+                    {doc.extracted_text}
+                  </p>
+                )}
+                {!doc.extracted_text && doc.summary && (
                   <p className="text-sm text-muted-foreground mt-3 line-clamp-2">
                     {typeof doc.summary === "string" ? doc.summary : JSON.stringify(doc.summary)}
                   </p>

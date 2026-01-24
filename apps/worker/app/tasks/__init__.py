@@ -18,6 +18,7 @@ from app.tasks.export import (
     export_print_pdf,
     export_figma,
 )
+from app.tasks.extract_document import extract_theme_document
 
 __all__ = [
     "analyze_upload",
@@ -36,4 +37,5 @@ __all__ = [
     # Export tasks
     "export_print_pdf",
     "export_figma",
+    "extract_theme_document",
 ]

@@ -102,6 +102,7 @@ class JobQueueService:
             "generate_social_media": "app.tasks.generate.generate_social_media",
             "generate_email": "app.tasks.generate.generate_email",
             "scrape_reference": "app.tasks.scrape.scrape_reference",
+            "extract_document": "app.tasks.extract_document.extract_theme_document",
             # Theme asset generation
             "generate_flyer": "app.tasks.theme_generate.generate_flyer",
             "generate_brochure": "app.tasks.theme_generate.generate_brochure",

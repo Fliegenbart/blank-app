@@ -6,7 +6,7 @@ logger = structlog.get_logger()
 
 from app.api.v1.endpoints import (
     auth, users, brands, uploads, jobs, profiles,
-    generate, outputs, references
+    generate, outputs, references, files
 )
 
 # Try to import theme endpoints with detailed error logging
@@ -33,6 +33,7 @@ api_router.include_router(profiles.router)
 api_router.include_router(generate.router)
 api_router.include_router(outputs.router)
 api_router.include_router(references.router)
+api_router.include_router(files.router)
 
 if THEMES_AVAILABLE:
     api_router.include_router(themes.router)

@@ -30,6 +30,7 @@ function BrandsPageContent() {
   const [newBrandName, setNewBrandName] = useState("");
   const [newBrandSlug, setNewBrandSlug] = useState("");
   const [newBrandDescription, setNewBrandDescription] = useState("");
+  const [isCreatingDemo, setIsCreatingDemo] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -94,6 +95,43 @@ function BrandsPageContent() {
       });
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleCreateDemoBrand = async () => {
+    if (!token) return;
+    setIsCreatingDemo(true);
+    try {
+      const demoName = "Demo Brand";
+      const demo = await api.createBrand(token, {
+        name: demoName,
+        slug: `demo-${Date.now()}`,
+        description: "Sample brand created from demo assets",
+      });
+
+      const res = await fetch("/demo/sample.pptx");
+      const blob = await res.blob();
+      const file = new File([blob], "demo-sample.pptx", {
+        type: blob.type || "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      });
+
+      const upload = await api.uploadFile(token, demo.id, file);
+      const job = await api.startAnalysis(token, demo.id, upload.id);
+
+      toast({
+        title: "Demo brand created",
+        description: "We started analysis using the demo file.",
+      });
+
+      router.push(`/jobs/${job.id}`);
+    } catch (err) {
+      toast({
+        title: "Failed to create demo brand",
+        description: err instanceof Error ? err.message : "Unknown error",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingDemo(false);
     }
   };
 
@@ -188,10 +226,19 @@ function BrandsPageContent() {
               <p className="text-muted-foreground mb-4">
                 No brands yet. Create your first brand to get started.
               </p>
-              <Button onClick={() => setShowCreateDialog(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Create Brand
-              </Button>
+              <div className="flex flex-col gap-3 w-full max-w-xs">
+                <Button onClick={() => setShowCreateDialog(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Brand
+                </Button>
+                <Button variant="outline" onClick={() => router.push("/onboarding")}>
+                  Guided Setup
+                </Button>
+                <Button variant="secondary" onClick={handleCreateDemoBrand} disabled={isCreatingDemo}>
+                  {isCreatingDemo && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Create Demo Brand
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (

@@ -3,6 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse, RedirectResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 import io
 
 from app.core.database import get_db
@@ -107,6 +108,46 @@ def download_output(
             "Content-Disposition": f'attachment; filename="{output.name}"',
         },
     )
+
+
+@router.delete("/outputs/{output_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_output(
+    output_id: str,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Delete an output and its stored file."""
+    output = db.query(Output).filter(Output.id == output_id).first()
+    if not output:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Output not found",
+        )
+
+    if not current_user.is_superuser:
+        membership = (
+            db.query(BrandMember)
+            .filter(BrandMember.brand_id == output.brand_id, BrandMember.user_id == current_user.id)
+            .first()
+        )
+        if not membership or membership.role not in ("owner", "editor"):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You don't have permission to delete this output",
+            )
+
+    # Null out job references to avoid FK violations
+    db.execute(
+        text("UPDATE jobs SET output_id = NULL WHERE output_id = :output_id"),
+        {"output_id": output.id},
+    )
+
+    storage = get_storage_service()
+    if output.storage_path:
+        storage.delete_file(output.storage_path)
+
+    db.delete(output)
+    db.commit()
 
 
 def _output_to_response(output: Output) -> OutputResponse:

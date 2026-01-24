@@ -55,3 +55,9 @@ class BrandMemberCreate(BaseModel):
 
     user_email: str
     role: BrandRole = BrandRole.VIEWER
+
+
+class BrandMemberUpdate(BaseModel):
+    """Schema for updating a brand member."""
+
+    role: BrandRole

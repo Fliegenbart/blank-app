@@ -8,7 +8,14 @@ from app.api.v1.dependencies.rbac import require_brand_access, require_brand_edi
 from app.models.user import User
 from app.models.organization import Organization
 from app.models.brand import Brand, BrandMember, BrandRole
-from app.schemas.brand import BrandCreate, BrandUpdate, BrandResponse, BrandMemberCreate, BrandMemberResponse
+from app.schemas.brand import (
+    BrandCreate,
+    BrandUpdate,
+    BrandResponse,
+    BrandMemberCreate,
+    BrandMemberResponse,
+    BrandMemberUpdate,
+)
 
 router = APIRouter(prefix="/brands", tags=["brands"])
 
@@ -259,6 +266,41 @@ def add_member(
         full_name=user.full_name,
         role=new_member.role,
         created_at=new_member.created_at,
+    )
+
+
+@router.put("/{brand_id}/members/{member_id}", response_model=BrandMemberResponse)
+def update_member(
+    brand_id: str,
+    member_id: str,
+    member_data: BrandMemberUpdate,
+    membership: BrandMember = Depends(require_brand_owner),
+    db: Session = Depends(get_db),
+):
+    """Update a member's role."""
+    member = (
+        db.query(BrandMember)
+        .filter(BrandMember.id == member_id, BrandMember.brand_id == brand_id)
+        .first()
+    )
+    if not member:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Member not found",
+        )
+
+    member.role = member_data.role
+    db.commit()
+    db.refresh(member)
+
+    user = member.user
+    return BrandMemberResponse(
+        id=member.id,
+        user_id=member.user_id,
+        email=user.email if user else "",
+        full_name=user.full_name if user else None,
+        role=member.role,
+        created_at=member.created_at,
     )
 
 

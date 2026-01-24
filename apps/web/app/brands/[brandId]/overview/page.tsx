@@ -147,6 +147,15 @@ export default function BrandOverviewPage() {
                   Generate Content
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
+                <Button
+                  variant="secondary"
+                  className="w-full"
+                  onClick={() => router.push(`/brands/${brand.id}/themes?new=true`)}
+                  disabled={!canEdit}
+                >
+                  Create Theme
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
               </>
             )}
           </CardContent>

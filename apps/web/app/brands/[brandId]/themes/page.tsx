@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,6 +44,7 @@ const statusLabels: Record<ThemeStatus, string> = {
 export default function ThemesPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const brandId = params.brandId as string;
 
   const [themes, setThemes] = useState<ThemeListItem[]>([]);
@@ -73,6 +74,12 @@ export default function ThemesPage() {
   useEffect(() => {
     loadThemes();
   }, [loadThemes]);
+
+  useEffect(() => {
+    if (searchParams.get("new") === "true") {
+      setIsCreateOpen(true);
+    }
+  }, [searchParams]);
 
   const handleCreateTheme = async () => {
     if (!newTheme.name.trim()) return;

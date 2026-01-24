@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Upload,
@@ -13,6 +14,9 @@ import {
   Users,
   Layers,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/use-auth";
+import * as api from "@/lib/api";
 
 const navItems = [
   { href: "overview", label: "Overview", icon: LayoutDashboard },
@@ -28,6 +32,33 @@ export function BrandNav() {
   const params = useParams();
   const pathname = usePathname();
   const brandId = params.brandId as string;
+  const { token } = useAuth();
+  const [activeJobs, setActiveJobs] = useState(0);
+
+  useEffect(() => {
+    if (!token || !brandId) return;
+
+    let alive = true;
+    const fetchJobs = async () => {
+      try {
+        const jobs = await api.getJobs(token, brandId);
+        if (!alive) return;
+        const count = jobs.filter((job) =>
+          ["pending", "queued", "running"].includes(job.status)
+        ).length;
+        setActiveJobs(count);
+      } catch {
+        if (alive) setActiveJobs(0);
+      }
+    };
+
+    fetchJobs();
+    const interval = setInterval(fetchJobs, 5000);
+    return () => {
+      alive = false;
+      clearInterval(interval);
+    };
+  }, [token, brandId]);
 
   return (
     <nav className="flex space-x-1 border-b px-6 overflow-x-auto">
@@ -48,7 +79,14 @@ export function BrandNav() {
             )}
           >
             <Icon className="h-4 w-4" />
-            {item.label}
+            <span className="flex items-center gap-2">
+              {item.label}
+              {item.href === "uploads" && activeJobs > 0 && (
+                <Badge variant="secondary" className="h-5 px-1.5">
+                  {activeJobs}
+                </Badge>
+              )}
+            </span>
           </Link>
         );
       })}

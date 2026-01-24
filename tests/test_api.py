@@ -15,6 +15,23 @@ import os
 BASE_URL = os.getenv("API_URL", "http://localhost:8000")
 
 
+@pytest.fixture
+def auth_token():
+    """Get an auth token for testing."""
+    import uuid
+    unique_id = str(uuid.uuid4())[:8]
+    user = {
+        "email": f"brand_test_{unique_id}@example.com",
+        "password": "testpassword123",
+    }
+    httpx.post(f"{BASE_URL}/api/v1/auth/register", json=user)
+    response = httpx.post(
+        f"{BASE_URL}/api/v1/auth/login",
+        data={"username": user["email"], "password": user["password"]},
+    )
+    return response.json()["access_token"]
+
+
 class TestHealthCheck:
     """Test health check endpoint."""
 
@@ -95,22 +112,6 @@ class TestAuth:
 class TestBrands:
     """Test brand CRUD operations."""
 
-    @pytest.fixture
-    def auth_token(self):
-        """Get an auth token for testing."""
-        import uuid
-        unique_id = str(uuid.uuid4())[:8]
-        user = {
-            "email": f"brand_test_{unique_id}@example.com",
-            "password": "testpassword123",
-        }
-        httpx.post(f"{BASE_URL}/api/v1/auth/register", json=user)
-        response = httpx.post(
-            f"{BASE_URL}/api/v1/auth/login",
-            data={"username": user["email"], "password": user["password"]},
-        )
-        return response.json()["access_token"]
-
     def test_create_brand(self, auth_token):
         """Test creating a brand."""
         import uuid
@@ -165,6 +166,171 @@ class TestBrands:
         data = response.json()
         assert data["id"] == brand_id
         assert data["name"] == "Get Test Brand"
+
+    def test_update_brand_member_role(self, auth_token):
+        """Test updating a brand member role."""
+        import uuid
+
+        # Create second user
+        member_email = f"member_{uuid.uuid4()}@example.com"
+        member_password = "testpassword123"
+        httpx.post(
+            f"{BASE_URL}/api/v1/auth/register",
+            json={"email": member_email, "password": member_password},
+        )
+
+        # Create brand
+        create_response = httpx.post(
+            f"{BASE_URL}/api/v1/brands",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={
+                "name": "Members Brand",
+                "slug": f"members-brand-{str(uuid.uuid4())[:8]}",
+            },
+        )
+        brand_id = create_response.json()["id"]
+
+        # Add member
+        add_response = httpx.post(
+            f"{BASE_URL}/api/v1/brands/{brand_id}/members",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={"user_email": member_email, "role": "viewer"},
+        )
+        assert add_response.status_code == 201
+        member_id = add_response.json()["id"]
+
+        # Update role
+        update_response = httpx.put(
+            f"{BASE_URL}/api/v1/brands/{brand_id}/members/{member_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+            json={"role": "editor"},
+        )
+        assert update_response.status_code == 200
+        assert update_response.json()["role"] == "editor"
+
+
+class TestOutputs:
+    """Test output generation and deletion."""
+
+    def _create_sample_pptx(self, path: str):
+        """Create a simple PPTX for upload."""
+        from pptx import Presentation
+
+        prs = Presentation()
+        slide_layout = prs.slide_layouts[1]
+        slide = prs.slides.add_slide(slide_layout)
+        slide.shapes.title.text = "Sample Brand"
+        slide.placeholders[1].text = "Sample content for testing"
+        prs.save(path)
+
+    def _poll_job(self, token: str, job_id: str, timeout: int = 60):
+        import time
+
+        headers = {"Authorization": f"Bearer {token}"}
+        start = time.time()
+        while time.time() - start < timeout:
+            resp = httpx.get(f"{BASE_URL}/api/v1/jobs/{job_id}", headers=headers)
+            resp.raise_for_status()
+            status = resp.json()["status"]
+            if status in ("completed", "failed"):
+                return status
+            time.sleep(2)
+        return "timeout"
+
+    def test_generate_and_delete_output(self):
+        """Generate a website output and delete it."""
+        import uuid
+        import tempfile
+        import os
+
+        # Register and login
+        email = f"output_{uuid.uuid4()}@example.com"
+        password = "testpassword123"
+        httpx.post(
+            f"{BASE_URL}/api/v1/auth/register",
+            json={"email": email, "password": password},
+        )
+        login_response = httpx.post(
+            f"{BASE_URL}/api/v1/auth/login",
+            data={"username": email, "password": password},
+        )
+        token = login_response.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+
+        # Create brand
+        create_response = httpx.post(
+            f"{BASE_URL}/api/v1/brands",
+            headers=headers,
+            json={
+                "name": "Output Brand",
+                "slug": f"output-brand-{str(uuid.uuid4())[:8]}",
+            },
+        )
+        brand_id = create_response.json()["id"]
+
+        # Upload sample pptx
+        with tempfile.TemporaryDirectory() as tmpdir:
+            sample_path = os.path.join(tmpdir, "sample.pptx")
+            self._create_sample_pptx(sample_path)
+            with open(sample_path, "rb") as f:
+                files = {
+                    "file": (
+                        "sample.pptx",
+                        f,
+                        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                    )
+                }
+                upload_response = httpx.post(
+                    f"{BASE_URL}/api/v1/brands/{brand_id}/uploads",
+                    headers=headers,
+                    files=files,
+                )
+        upload_id = upload_response.json()["id"]
+
+        # Analyze upload
+        analyze_response = httpx.post(
+            f"{BASE_URL}/api/v1/brands/{brand_id}/analyze",
+            headers=headers,
+            params={"upload_id": upload_id},
+        )
+        analyze_job_id = analyze_response.json()["id"]
+        assert self._poll_job(token, analyze_job_id) == "completed"
+
+        # Generate website
+        gen_response = httpx.post(
+            f"{BASE_URL}/api/v1/brands/{brand_id}/generate/website",
+            headers=headers,
+            json={"topic": "Launch", "pages": [{"slug": "index", "title": "Home", "sections": ["hero"]}]},
+        )
+        gen_job_id = gen_response.json()["id"]
+        assert self._poll_job(token, gen_job_id, timeout=90) == "completed"
+
+        # List outputs
+        outputs_response = httpx.get(
+            f"{BASE_URL}/api/v1/brands/{brand_id}/outputs",
+            headers=headers,
+        )
+        outputs = outputs_response.json()
+        assert outputs
+        output_id = outputs[0]["id"]
+
+        # Delete output
+        delete_response = httpx.delete(
+            f"{BASE_URL}/api/v1/outputs/{output_id}",
+            headers=headers,
+        )
+        assert delete_response.status_code == 204
+
+
+class TestFiles:
+    """Test file download endpoint permissions."""
+
+    def test_files_endpoint_rejects_unknown(self, auth_token):
+        response = httpx.get(
+            f"{BASE_URL}/api/v1/files/unknown/path",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+        assert response.status_code in (403, 404)
 
 
 class TestAnalyzerUnits:

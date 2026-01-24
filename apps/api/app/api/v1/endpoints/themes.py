@@ -280,9 +280,24 @@ async def upload_theme_document(
     db.commit()
     db.refresh(document)
 
-    # TODO: Enqueue document extraction job
-    # job_queue = JobQueueService(db)
-    # job_queue.enqueue_extract_document(document.id)
+    # Enqueue document extraction job
+    job = Job(
+        brand_id=brand_id,
+        created_by=current_user.id,
+        job_type=JobType.EXTRACT_DOCUMENT.value,
+        status=JobStatus.PENDING.value,
+        params_json=json.dumps({"theme_document_id": document.id}),
+    )
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+
+    job_queue = JobQueueService()
+    rq_job_id = job_queue.enqueue_job(job.id, "extract_document")
+    job.rq_job_id = rq_job_id
+    job.status = JobStatus.QUEUED.value
+    document.status = "queued"
+    db.commit()
 
     return _document_to_response(document)
 
@@ -350,6 +365,56 @@ def delete_theme_document(
 
     db.delete(document)
     db.commit()
+
+
+@router.post("/{theme_id}/documents/{document_id}/extract", response_model=ThemeDocumentResponse)
+def retry_theme_document_extraction(
+    brand_id: str,
+    theme_id: str,
+    document_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    member: BrandMember = Depends(get_brand_member),
+):
+    """Retry extraction for a theme document."""
+    if member.role not in [BrandRole.OWNER, BrandRole.EDITOR]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only owners and editors can extract documents"
+        )
+
+    document = db.query(ThemeDocument).filter(
+        ThemeDocument.id == document_id,
+        ThemeDocument.theme_id == theme_id
+    ).first()
+
+    if not document:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document not found"
+        )
+
+    document.status = "queued"
+    db.commit()
+
+    job = Job(
+        brand_id=brand_id,
+        created_by=current_user.id,
+        job_type=JobType.EXTRACT_DOCUMENT.value,
+        status=JobStatus.PENDING.value,
+        params_json=json.dumps({"theme_document_id": document.id}),
+    )
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+
+    job_queue = JobQueueService()
+    rq_job_id = job_queue.enqueue_job(job.id, "extract_document")
+    job.rq_job_id = rq_job_id
+    job.status = JobStatus.QUEUED.value
+    db.commit()
+
+    return _document_to_response(document)
 
 
 # === Theme Assets ===
