@@ -1,5 +1,6 @@
 streamlit
 python-pptx
+python-docx
 pillow
 reportlab
 pypdf
