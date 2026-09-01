@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NeX26 – Regie / Ingest</title>
+<style>
+  body { background:#111; color:#eee; font-family:ui-monospace,Menlo,Consolas,monospace; padding:24px; max-width:720px; margin:0 auto; }
+  h1 { font-size:1.1rem; margin-bottom:16px; }
+  button { padding:14px 22px; font-size:1rem; border-radius:8px; border:none; cursor:pointer; }
+  #recBtn { background:#2ecc71; color:#000; font-weight:700; }
+  #recBtn.rec { background:#e74c3c; color:#fff; }
+  #meter { height:14px; background:#222; border-radius:7px; margin:18px 0; overflow:hidden; }
+  #meterFill { height:100%; width:0; background:linear-gradient(90deg,#2ecc71,#f1c40f,#e74c3c); }
+  pre { background:#1a1a1a; padding:12px; border-radius:8px; margin-top:16px; white-space:pre-wrap; }
+  select { padding:8px; margin-right:12px; background:#222; color:#eee; border:1px solid #444; border-radius:6px; max-width:60%; }
+</style>
+</head>
+<body>
+<h1>NeX26 Ingest – Clean Feed vom Mischpult</h1>
+<div>
+  <select id="devices"></select>
+  <button id="recBtn">● Start</button>
+</div>
+<div id="meter"><div id="meterFill"></div></div>
+<pre id="log">bereit</pre>
+<script>
+(() => {
+  const token = new URLSearchParams(location.search).get('token') || '';
+  const log = m => { document.getElementById('log').textContent = m + '\n' + document.getElementById('log').textContent.slice(0, 4000); };
+  let running = false, ws = null, ctx = null, stream = null, workletNode = null;
+
+  async function listDevices() {
+    await navigator.mediaDevices.getUserMedia({ audio: true }).then(s => s.getTracks().forEach(t => t.stop())).catch(()=>{});
+    const devs = await navigator.mediaDevices.enumerateDevices();
+    const sel = document.getElementById('devices');
+    sel.innerHTML = '';
+    devs.filter(d => d.kind === 'audioinput').forEach(d => {
+      const o = document.createElement('option');
+      o.value = d.deviceId; o.textContent = d.label || d.deviceId;
+      sel.appendChild(o);
+    });
+  }
+  listDevices();
+
+  const workletCode = `
+    class PCMSender extends AudioWorkletProcessor {
+      process(inputs) {
+        const ch = inputs[0][0];
+        if (ch) {
+          const out = new Int16Array(ch.length);
+          for (let i = 0; i < ch.length; i++) {
+            const s = Math.max(-1, Math.min(1, ch[i]));
+            out[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+          }
+          this.port.postMessage(out.buffer, [out.buffer]);
+        }
+        return true;
+      }
+    }
+    registerProcessor('pcm-sender', PCMSender);`;
+
+  async function start() {
+    const deviceId = document.getElementById('devices').value;
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: { deviceId: deviceId ? { exact: deviceId } : undefined,
+               channelCount: 1, echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+    });
+    ctx = new AudioContext({ sampleRate: 16000 });
+    const blob = new Blob([workletCode], { type: 'application/javascript' });
+    await ctx.audioWorklet.addModule(URL.createObjectURL(blob));
+    const src = ctx.createMediaStreamSource(stream);
+    workletNode = new AudioWorkletNode(ctx, 'pcm-sender');
+    src.connect(workletNode);
+
+    const analyser = ctx.createAnalyser();
+    src.connect(analyser);
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    (function meter() {
+      if (!running) return;
+      analyser.getByteTimeDomainData(data);
+      let peak = 0;
+      for (const v of data) peak = Math.max(peak, Math.abs(v - 128) / 128);
+      document.getElementById('meterFill').style.width = (peak * 100) + '%';
+      requestAnimationFrame(meter);
+    })();
+
+    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    ws = new WebSocket(`${proto}://${location.host}/ws/ingest?token=${encodeURIComponent(token)}`);
+    ws.binaryType = 'arraybuffer';
+    ws.onopen = () => log('ingest verbunden, sende 16 kHz PCM');
+    ws.onclose = e => { log('ingest getrennt (' + e.code + ')'); if (running) setTimeout(start, 2000); };
+    workletNode.port.onmessage = ev => { if (ws.readyState === 1) ws.send(ev.data); };
+
+    setInterval(async () => {
+      if (!running) return;
+      try {
+        const h = await (await fetch('/health')).json();
+        log(`Hörer: ${h.listeners} · Queue: ${h.queue_depth} · Latenz: ${h.last_latency_s}s · Segmente: ${h.segments_done}/${h.segments_in}`);
+      } catch {}
+    }, 5000);
+  }
+
+  document.getElementById('recBtn').onclick = async () => {
+    running = !running;
+    const btn = document.getElementById('recBtn');
+    if (running) {
+      btn.textContent = '■ Stop'; btn.classList.add('rec');
+      try { await start(); } catch (e) { log('Fehler: ' + e.message); running = false; btn.textContent = '● Start'; btn.classList.remove('rec'); }
+    } else {
+      btn.textContent = '● Start'; btn.classList.remove('rec');
+      ws?.close(); ctx?.close(); stream?.getTracks().forEach(t => t.stop());
+    }
+  };
+})();
+</script>
+</body>
+</html>
