@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>NeX26 – Live-Übersetzung</title>
+<style>
+  :root { --bg:#0e1a2b; --card:#16263c; --accent:#e2001a; --text:#f4f7fb; --muted:#8fa3bd; }
+  * { box-sizing:border-box; margin:0; }
+  body { background:var(--bg); color:var(--text); font-family:-apple-system,'Segoe UI',Roboto,sans-serif;
+         min-height:100vh; display:flex; flex-direction:column; }
+  header { padding:16px 20px; border-bottom:1px solid #223650; display:flex; align-items:center; gap:10px; }
+  header .dot { width:10px; height:10px; border-radius:50%; background:#666; }
+  header .dot.live { background:#2ecc71; box-shadow:0 0 8px #2ecc71; }
+  header h1 { font-size:1.05rem; font-weight:600; }
+  header small { color:var(--muted); margin-left:auto; }
+  main { flex:1; padding:20px; display:flex; flex-direction:column; gap:16px; max-width:640px; width:100%; margin:0 auto; }
+  #startBtn { padding:18px; font-size:1.15rem; font-weight:700; border:none; border-radius:12px;
+              background:var(--accent); color:#fff; cursor:pointer; }
+  #captions { background:var(--card); border-radius:12px; padding:18px; min-height:40vh;
+              overflow-y:auto; display:flex; flex-direction:column; gap:12px; }
+  .cap { line-height:1.45; }
+  .cap .de { font-size:1.25rem; }
+  .cap .en { font-size:0.8rem; color:var(--muted); margin-top:2px; display:none; }
+  body.show-en .cap .en { display:block; }
+  .controls { display:flex; gap:10px; flex-wrap:wrap; }
+  .controls button { flex:1; padding:10px; border-radius:10px; border:1px solid #2c4364;
+                     background:var(--card); color:var(--text); cursor:pointer; }
+  .controls button.active { border-color:var(--accent); }
+  footer { text-align:center; color:var(--muted); font-size:0.75rem; padding:12px; }
+</style>
+</head>
+<body>
+<header>
+  <span class="dot" id="dot"></span>
+  <h1>NeX26 · Deutsche Live-Übersetzung</h1>
+  <small id="status">nicht verbunden</small>
+</header>
+<main>
+  <button id="startBtn">▶ Übersetzung starten</button>
+  <div id="captions" hidden></div>
+  <div class="controls" id="controls" hidden>
+    <button id="muteBtn">🔊 Ton an</button>
+    <button id="enBtn">EN-Text einblenden</button>
+  </div>
+</main>
+<footer>Kopfhörer empfohlen · Übersetzung durch KI, ohne Gewähr</footer>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  let ctx = null, gain = null, nextTime = 0, muted = false, ws = null;
+
+  function connect() {
+    const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+    ws = new WebSocket(`${proto}://${location.host}/ws/listen`);
+    ws.binaryType = 'arraybuffer';
+    ws.onopen = () => { $('dot').classList.add('live'); $('status').textContent = 'live'; };
+    ws.onclose = () => {
+      $('dot').classList.remove('live'); $('status').textContent = 'Verbindung getrennt…';
+      setTimeout(connect, 2000);
+    };
+    ws.onmessage = ev => {
+      if (typeof ev.data === 'string') return addCaption(JSON.parse(ev.data));
+      playChunk(ev.data);
+    };
+  }
+
+  function addCaption(msg) {
+    if (msg.type !== 'caption') return;
+    const box = $('captions');
+    const el = document.createElement('div');
+    el.className = 'cap';
+    el.innerHTML = `<div class="de"></div><div class="en"></div>`;
+    el.querySelector('.de').textContent = msg.de;
+    el.querySelector('.en').textContent = msg.en;
+    box.appendChild(el);
+    while (box.children.length > 30) box.removeChild(box.firstChild);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  async function playChunk(arrayBuf) {
+    if (!ctx || muted) return;
+    try {
+      const buf = await ctx.decodeAudioData(arrayBuf.slice(0));
+      const now = ctx.currentTime;
+      // Latenz begrenzen: bei >10 s Rückstand alte Segmente überspringen
+      if (nextTime - now > 10) nextTime = now;
+      nextTime = Math.max(now, nextTime);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(gain);
+      src.start(nextTime);
+      nextTime += buf.duration;
+    } catch (e) { console.warn('decode failed', e); }
+  }
+
+  $('startBtn').onclick = () => {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    gain = ctx.createGain();
+    gain.connect(ctx.destination);
+    ctx.resume();
+    $('startBtn').hidden = true;
+    $('captions').hidden = false;
+    $('controls').hidden = false;
+    connect();
+  };
+
+  $('muteBtn').onclick = () => {
+    muted = !muted;
+    $('muteBtn').textContent = muted ? '🔇 Ton aus (nur Untertitel)' : '🔊 Ton an';
+    $('muteBtn').classList.toggle('active', muted);
+  };
+
+  $('enBtn').onclick = () => {
+    document.body.classList.toggle('show-en');
+    $('enBtn').classList.toggle('active');
+  };
+})();
+</script>
+</body>
+</html>

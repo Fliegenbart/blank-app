@@ -1,0 +1,21 @@
+services:
+  nex26:
+    build: .
+    ports:
+      - "127.0.0.1:8026:8026"
+    env_file: .env
+    restart: unless-stopped
+    volumes:
+      - ./logs:/app/logs
+      - models:/root/.cache   # Whisper-/Piper-Downloads persistieren
+    # Auf GPU-Server (GEX44) einkommentieren:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+volumes:
+  models:
